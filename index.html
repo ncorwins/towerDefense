@@ -35,17 +35,23 @@ var canvas = document.getElementById("myCanvas");
 var c = canvas.getContext("2d");
 c.font = "30px ArcadeClassic";
 
+var enemies = [
+  {x: 0, y: 0, w: 80, h: 80, speed: 1,color: "green", current: 0, pixel: 0},
+  {x: 0, y: 0, w: 80, h: 80, speed: 3,color: "blue", current: 0, pixel: 0},
+  {x: 0, y: 0, w: 80, h: 80, speed: 4,color: "red", current: 0, pixel: 0}
+];
+
 const level1 = [
 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 
 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 
-0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 
+0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 
+0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 
+0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 
+0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 
+0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 
+0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 
 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 
-0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 
-0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 
-0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 
-0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 
-0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 
-0, 0, 1, 0, 0, 0, 0, 0, 0, 0];
+0, 0, 0, 0, 0, 0, 0, 0, 1, 0];
 // USE https://gube.live/pingu/grid-template/
 class Enemy {
   constructor(x, y, width, height) {
@@ -82,23 +88,47 @@ class Gunner extends Tower {
   
 }
 var gunner = new Gunner(10, -10, 10, 10);
+var coords = [];
+var directions = [];
+var rows = 10;
+var currentRow = 0;
+for (let i = 0; i < level1.length; i++) {
+    if (i % rows == 0) {
+      currentRow++;
+    }
+    if (level1[i] == 0) {
+      c.fillStyle = "black";
+    }
+    else {
+      c.fillStyle = "purple";
+    }
+    coords.push({
+      x: (i % rows)*80,
+      y: (currentRow-1)*80,
+      w: 80,
+      h: 80,
+      value: level1[i],
+    });
+    c.fillRect((i % rows)*80, (currentRow-1)*80, 80, 80);
+  }
+  for (let i = 0; i < coords.length; i++) {
+    if (coords[i].value != 0) {
+      directions.push(coords[i]);
+    }
+  }
+  directions.push({
+        x: directions[directions.length-1].x,
+        y: directions[directions.length-1].y+80,
+        w: 80,
+        h: 80,
+        value: 1}); // handles going down at end
 
-function drawBullet(x, y, width, height, img) {
-  c.fillStyle = "blue"
-  c.fillRect(x, y, width, height);
-  requestAnimationFrame();
-}
 
 
 
-function Timer() { // game timer
-    seconds+=.15;
-
-}
-
+console.log(coords);
 function drawBackground() {
-  var rows = 10;
-  var currentRow = 0;
+  currentRow = 0;
   for (let i = 0; i < level1.length; i++) {
     if (i % rows == 0) {
       currentRow++;
@@ -116,6 +146,74 @@ function drawBackground() {
 drawBackground();
 
 
+function drawBullet(x, y, width, height, img) {
+  c.fillStyle = "blue"
+  c.fillRect(x, y, width, height);
+  requestAnimationFrame();
+}
+
+function drawEnemies() {
+  for (let i = 0; i < enemies.length; i++) {
+    if (enemies[i] == null) {
+      continue;
+    }
+    c.fillStyle = enemies[i].color;
+    c.fillRect(enemies[i].x, enemies[i].y, enemies[i].w, enemies[i].h);
+  }
+  window.requestAnimationFrame(drawEnemies);
+}
+
+function moveEnemies() {
+  for (let i = 0; i < enemies.length; i++) {
+    if (enemies[i] == null) {
+      continue;
+    }
+    if (enemies[i].current == directions.length-1) {
+      enemies[i] = null;
+      continue;
+    }
+    if (enemies[i].current == 0) {
+      enemies[i].x = directions[1].x;
+      enemies[i].y = -80 + enemies[i].pixel;
+    }
+    else {
+      if (directions[enemies[i].current].x < directions[enemies[i].current+1].x) {
+        enemies[i].x+=enemies[i].speed;
+      }
+      if (directions[enemies[i].current].x > directions[enemies[i].current+1].x) {
+        enemies[i].x-=enemies[i].speed;
+      }
+      if (directions[enemies[i].current].y < directions[enemies[i].current+1].y) {
+        enemies[i].y+=enemies[i].speed;
+      }
+      if (directions[enemies[i].current].y > directions[enemies[i].current+1].y) {
+        enemies[i].y-=enemies[i].speed;
+      }
+    }
+
+    enemies[i].pixel+=enemies[i].speed;
+
+
+    if (enemies[i].pixel >= 80) {
+        enemies[i].current++;
+        enemies[i].x = directions[enemies[i].current].x;
+        enemies[i].y = directions[enemies[i].current].y;
+        enemies[i].pixel = 0;
+      }
+
+  }
+  console.log(enemies);
+  window.requestAnimationFrame(moveEnemies);
+}
+moveEnemies();
+
+function Timer() { // game timer
+    seconds+=.15;
+
+}
+
+
+drawEnemies();
 
 function getRandomIntInclusive(min, max) { // random function for ghost movement, returns integers
   min = Math.ceil(min);
