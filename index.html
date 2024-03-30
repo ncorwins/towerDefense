@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <link href="https://fonts.cdnfonts.com/css/arcade-classic" rel="stylesheet">
-<title>Kitten Catcher </title>
+<title>Tower Defense</title>
 <body>
 <body style="background-color:black;">
-  <canvas id="myCanvas" width='1600' height='900' style="background-color:#d4f6ff"></canvas>
+  <canvas id="myCanvas" width='800' height='800' style="background-color:#d4f6ff"></canvas>
 </body>
 <style>
 
@@ -11,8 +11,8 @@ canvas {
     padding: 0;
     margin: auto;
     display: block;
-    width: 1600px;
-    height: 900px;
+    width: 800px;
+    height: 800px;
     position: absolute;
     top: 0;
     bottom: 0;
@@ -33,8 +33,50 @@ canvas {
 // INITIALIZING ALL NECESSARY VARIABLES
 var canvas = document.getElementById("myCanvas");
 var c = canvas.getContext("2d");
-
 c.font = "30px ArcadeClassic";
+
+class Enemy {
+  constructor(x, y, width, height) {
+    this.x = x;
+    this.y = y;
+    this.width = width;
+    this.height = height;
+  }
+}
+class Tower {
+  constructor(x, y, width, height) {
+    this.x = x;
+    this.y = y;
+    this.width = width;
+    this.height = height;
+  }
+}
+
+class Gunner extends Tower {
+  constructor(x, y, width, height, fireRate) {
+    super(x, y, width, height);
+    this.fireRate = fireRate; // milliseconds per shot
+  }
+  render() {
+    c.fillStyle = "red";
+    c.fillRect(this.x, this.y, this.width, this.height);
+  }
+  shoot() {
+     //place logic for enemy detection here
+    if (true) {
+      drawBullet(this.x, this.y, this.width, this.height);
+    }
+  }
+  
+}
+var gunner = new Gunner(10, -10, 10, 10);
+
+function drawBullet(x, y, width, height, img) {
+  c.fillStyle = "blue"
+  c.fillRect(x, y, width, height);
+  requestAnimationFrame();
+}
+
 
 
 function Timer() { // game timer
@@ -42,23 +84,16 @@ function Timer() { // game timer
 
 }
 
-
-
 function drawBackground() {
 
 
 }
-
-
-
 
 function getRandomIntInclusive(min, max) { // random function for ghost movement, returns integers
   min = Math.ceil(min);
   max = Math.floor(max);
   return Math.floor(Math.random() * (max - min + 1) + min); // The maximum is inclusive and the minimum is inclusive
 }
-
-
 
 function isInside(pos, arr) {
     for (let i =0; i < arr.length; i++) {
@@ -73,7 +108,6 @@ function isInside(pos, arr) {
     return null;
 }
 
-
 function getMousePos(canvas, event) {
   var rect = canvas.getBoundingClientRect();
   return {
@@ -82,12 +116,19 @@ function getMousePos(canvas, event) {
   };
 }
 
-
-
 canvas.addEventListener("mousemove", function (event) {
 
-
 }, false);
+
+
+
+
+
+
+
+
+
+
 
 
 
