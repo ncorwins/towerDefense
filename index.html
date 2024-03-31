@@ -34,7 +34,7 @@ canvas {
 var canvas = document.getElementById("myCanvas");
 var c = canvas.getContext("2d");
 c.font = "30px ArcadeClassic";
-
+c.imageSmoothingEnabled = false;
 const NUMCOLS = 15;
 const NUMROWS = 10;
 const GAMEWIDTH = 900;
@@ -42,11 +42,15 @@ const GAMEHEIGHT = 600;
 const XOFFSET = (canvas.width-GAMEWIDTH)/2;
 const YOFFSET = (canvas.height-GAMEHEIGHT)/2;
 
+var empty = new Image();
+empty.src = "images/empty.png";
+var tower = new Image();
+tower.src = "images/tower.png";
 
 var enemies = [
-  {x: XOFFSET, y: YOFFSET, w: 60, h: 60, speed: .5,color: "green", current: 0, pixel: 0},
-  {x: XOFFSET, y: YOFFSET, w: 60, h: 60, speed: 1,color: "blue", current: 0, pixel: 0},
-  {x: XOFFSET, y: YOFFSET, w: 60, h: 60, speed: 2,color: "red", current: 0, pixel: 0}
+  {x: XOFFSET, y: YOFFSET, w: 60, h: 60, speed: 5,color: "green", current: 0, pixel: 0},
+  {x: XOFFSET, y: YOFFSET, w: 60, h: 60, speed: 3,color: "blue", current: 0, pixel: 0},
+  {x: XOFFSET, y: YOFFSET, w: 60, h: 60, speed: 4,color: "red", current: 0, pixel: 0}
 ];
 console.log("THIS GUY STIIINKS");
 const level1 = [
@@ -62,46 +66,33 @@ const level1 = [
 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0];
 const level1SS = [0,0];
 
-const level2 = [
-1, 0, 0, 1, 1, 1, 0, 1, 1, 1, 
-1, 0, 0, 1, 0, 1, 0, 1, 0, 1, 
-1, 0, 0, 1, 0, 1, 0, 1, 0, 1, 
-1, 0, 0, 1, 0, 1, 0, 1, 0, 1, 
-1, 0, 0, 1, 0, 1, 1, 1, 0, 1, 
-1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 
-1, 0, 0, 1, 1, 0, 1, 1, 1, 1, 
-1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 
-1, 0, 0, 0, 1, 0, 1, 0, 1, 1, 
-1, 1, 1, 1, 1, 0, 1, 1, 1, 0]; // top left is 0,0 btm right is 9,9
-var level2SS = [0,0];
 
-const level3 = [
-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 
-0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 
-0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 
-0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 
-0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 
-0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 
-0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 
-0, 0, 0, 0, 0, 1, 1, 1, 1, 1];
-var level3SS = [0,0];
-
-const level4 = [
-1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 
-0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 
-0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 
-0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 
-0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 
-0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 
-0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 
-1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 
-1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 
-1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
-var level4SS = [0,0];
+var towers = [{
+  x: 450, 
+  y: 400, 
+  w: 60, 
+  h: 60,
+  dy: 0,
+  dx: 0,
+  target: -1,
+  blankimg: empty,
+  img: tower
+},
+{
+  x: 700, 
+  y: 650, 
+  w: 60, 
+  h: 60,
+  dy: 0,
+  dx: 0,
+  target: -1,
+  blankimg: empty,
+  img: tower
+}]
 
 
+
+var bullets = []
 
 
 var selectedLevelMap = level1;
@@ -199,13 +190,38 @@ function pathFind(selectedLevelMap, startSq) {
 }
 function drawTowers() {
     c.fillStyle = "red";
+
     for (let i = 0; i < towers.length; i++) {
-      c.fillRect(towers[i].x, towers[i].y, towers[i].w, towers[i].h);
+      c.drawImage(towers[i].blankimg, towers[i].x, towers[i].y, towers[i].w, towers[i].h);
+      //c.drawImage(towers[i].img, towers[i].x, towers[i].y, towers[i].w, towers[i].h);
+      var angle = ((Math.atan2(towers[i].dy, towers[i].dx) * 180) / Math.PI);
+      //console.log(towers[i]);
+      drawRotated(Math.round(angle+90), towers[i]); // angle + 90 since we start at pi/2
     }
 
   window.requestAnimationFrame(drawTowers);
 }
 
+function drawRotated(degrees, tower){ // draw  a tower with rotation
+    //c.clearRect(0,0,canvas.width,canvas.height);
+
+    // save the unrotated context of the canvas so we can restore it later
+    // the alternative is to untranslate & unrotate after drawing
+    c.save();
+
+    // move to the center of the canvas
+    c.translate(tower.x+tower.w/2, tower.y+tower.h/2);
+
+    // rotate the canvas to the specified degrees
+    c.rotate(degrees*Math.PI/180);
+
+    // draw the image
+    // since the context is rotated, the image will be rotated also
+    c.drawImage(tower.img, -tower.w/2,-tower.h/2, tower.w, tower.h);
+
+    // we’re done with the rotating so restore the unrotated context
+    c.restore();
+}
 
 var coords = [];
 var directions = [];
@@ -260,6 +276,18 @@ function drawBullets() {
 }
 
 function drawBackground() {
+  var filtered = bullets.filter(function (el) {
+  return el != null;
+  });
+  bullets = filtered;
+  var filtered = enemies.filter(function (el) {
+  return el != null;
+  });
+  enemies = filtered;
+
+
+
+
   c.clearRect(0,0,canvas.width, canvas.height);
   currentRow = 0;
   for (let i = 0; i < selectedLevelMap.length; i++) {
@@ -278,27 +306,10 @@ function drawBackground() {
 }
 drawBackground();
 
-var towers = [{
-  x: 400, 
-  y: 400, 
-  w: 40, 
-  h: 40
-}]
-
-drawTowers();
-
-var bullets = [{
-  x: 55, 
-  y: 95, 
-  dx: 1, 
-  dy: 1, 
-  w: 10, 
-  h: 10
-}]
 
 
 drawBullets()
-
+drawTowers();
 function drawEnemies() {
   for (let i = 0; i < enemies.length; i++) {
     if (enemies[i] == null) {
@@ -364,6 +375,20 @@ function moveEnemies() {
 drawEnemies();
 moveEnemies();
 
+
+function shoot() {
+  if (enemies.length == 0) {
+    return;
+  }
+  for (let i = 0; i < towers.length; i++) {
+    addBullet({x: 0, y: 0}, towers[i]);
+  }
+}
+
+
+
+setInterval(shoot, 50);
+
 //HELPER FUNCTIONS
 var seconds = 0;
 function Timer() { // game timer
@@ -381,6 +406,37 @@ function Timer() { // game timer
     }
 }
 setInterval(Timer, 15);
+
+function adjustTowers() { // updates target and tower dy dx
+  for (let x = 0; x < towers.length; x++) {
+    if (enemies[towers[x].target] == null) {
+      towers[x].target = -1;
+    }
+    if (enemies.length == 0) {
+      break;
+    }
+    for (let i = enemies.length-1; i >= 0; i--) {
+      if (enemies[i] != null) {
+        if (towers[x].target == -1) {
+          towers[x].target = i;
+        }
+
+      }
+      else {
+        continue;
+      }
+    }
+    if (towers[x].target == -1) {
+      break;
+    }
+    towers[x].dx = enemies[towers[x].target].x-towers[x].x;
+    towers[x].dy = enemies[towers[x].target].y-towers[x].y;
+  }
+
+}
+
+
+setInterval(adjustTowers, 10);
 
 function getRandomIntInclusive(min, max) { // random function for ghost movement, returns integers
   min = Math.ceil(min);
@@ -425,18 +481,17 @@ canvas.addEventListener("mousemove", function (event) {
 function addBullet(position, tower) {
 
   bullets.push({
-  x: tower.x, 
-  y: tower.y, 
+  x: tower.x + tower.w/2-5, 
+  y: tower.y + tower.h/2, 
   dx: 0, 
   dy: 0, 
   w: 10, 
   h: 10
 });
-  updateBullet(bullets[bullets.length-1], position);
-
+  updateBullet(bullets[bullets.length-1], position, tower);
 }
 
-function updateBullet(bullet, position) {
+function updateBullet(bullet, position, tower = {x: -1}) {
   const AVERAGESPEED = 2; // AVG == 2 --> 1.95 is what it comes out to, keep in mind
   var changeX = (position.x-bullet.x);
   var changeY = (position.y-bullet.y);
@@ -474,7 +529,7 @@ function updateBullet(bullet, position) {
 
 canvas.addEventListener('click', function(event) {
   var mousePos = getMousePos(canvas, event);
-  addBullet(mousePos, towers[towers.length-1]);
+  //addBullet(mousePos, towers[towers.length-1]);
 }, false);
 </script>
 
