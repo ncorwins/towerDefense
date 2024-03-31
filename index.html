@@ -2,7 +2,7 @@
 <link href="https://fonts.cdnfonts.com/css/arcade-classic" rel="stylesheet">
 <title>Tower Defense</title>
 <body>
-<body style="background-color:black;">
+<body style="background-color:white;">
   <canvas id="myCanvas" width='800' height='800' style="background-color:#d4f6ff"></canvas>
 </body>
 <style>
@@ -184,44 +184,13 @@ function pathFind(selectedLevelMap, startSq) {
 }
 pathFind(level1, level1SS);
 
-console.log(pathCoords);
-
-
-
-
-class Enemy {
-  constructor(x, y, width, height) {
-    this.x = x;
-    this.y = y;
-    this.width = width; 
-    this.height = height;
-  }
-}
-class Tower {
-  constructor(x, y, width, height) {
-    this.x = x;
-    this.y = y;
-    this.width = width;
-    this.height = height;
-  }
-}
-
-class Gunner extends Tower {
-  constructor(x, y, width, height, fireRate) {
-    super(x, y, width, height);
-    this.fireRate = fireRate; // milliseconds per shot
-  }
-  render() {
+  /*////////////////////////////////
+  ---------------MAIN---------------
+  */////////////////////////////////
+function drawTower(x, y, width, height) {
     c.fillStyle = "red";
-    c.fillRect(this.x, this.y, this.width, this.height);
-  }
-  shoot() {
-     //place logic for enemy detection here
-    if (true) {
-      drawBullet(this.x, this.y, this.width, this.height);
-    }
-  }
-  
+    c.fillRect(x, y, width, height);
+    requestAnimationFrame(drawTower);
 }
 var gunner = new Gunner(10, -10, 10, 10);
 var coords = [];
@@ -257,6 +226,14 @@ for (let i = 0; i < pathCoords.length; i++) {
 
 
 
+function drawBullet(x, y, dx, dy, width, height) {
+  c.clearRect(x, y, width, height);
+  c.fillStyle = "green";
+  c.fillRect(x, y, width, height);
+  x += dx;
+  y += dy;
+  requestAnimationFrame(drawBullet);
+}
 
 function drawBackground() {
   currentRow = 0;
@@ -270,18 +247,14 @@ function drawBackground() {
     else {
       c.fillStyle = "white";
     }
-    c.fillRect((i % rows)*80, (currentRow-1)*80, 80, 80);
+    c.fillRect((i % rows)*80, (currentRow)*80, canvas.width / rows, canvas.height / rows);
   }
-  window.requestAnimationFrame(drawBackground);
+  requestAnimationFrame(drawBackground);
 }
 drawBackground();
 
-
-function drawBullet(x, y, width, height, img) {
-  c.fillStyle = "blue"
-  c.fillRect(x, y, width, height);
-  requestAnimationFrame();
-}
+drawTower(40, 80, 40, 40);
+drawBullet(55, 95, 1, 1, 10, 10)
 
 function drawEnemies() {
   for (let i = 0; i < enemies.length; i++) {
@@ -362,6 +335,10 @@ function Timer() { // game timer
 
 console.log(coords);
 
+//HELPER FUNCTIONS
+function Timer() { // game timer
+  seconds+=.15;
+}
 
 function getRandomIntInclusive(min, max) { // random function for ghost movement, returns integers
   min = Math.ceil(min);
@@ -370,16 +347,14 @@ function getRandomIntInclusive(min, max) { // random function for ghost movement
 }
 
 function isInside(pos, arr) {
-    for (let i =0; i < arr.length; i++) {
-        if (arr[i] != null) {
-            if (pos.x > arr[i].x && pos.x < arr[i].x + arr[i].w && pos.y < arr[i].y + arr[i].h && pos.y > arr[i].y) {
-                return arr[i];
-            }
-        }
-
+  for (let i =0; i < arr.length; i++) {
+    if (arr[i] != null) {
+      if (pos.x > arr[i].x && pos.x < arr[i].x + arr[i].w && pos.y < arr[i].y + arr[i].h && pos.y > arr[i].y) {
+        return arr[i];
+      }
     }
-
-    return null;
+  }
+  return null;
 }
 
 function getMousePos(canvas, event) {
@@ -390,32 +365,16 @@ function getMousePos(canvas, event) {
   };
 }
 
-canvas.addEventListener("mousemove", function (event) {
-
-}, false);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-canvas.addEventListener('click', function(event) {
-
-}, false);
-
 function randomN(lower, upper) { // random num gen from min to max (inclusive), returns floats
   return Math.random() * (upper - lower) + lower;
 }
+
+//EVENT LISTENERS
+canvas.addEventListener("mousemove", function (event) {
+}, false);
+
+canvas.addEventListener('click', function(event) {
+}, false);
 </script>
 
 
