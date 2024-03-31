@@ -48,9 +48,9 @@ var tower = new Image();
 tower.src = "images/tower.png";
 
 var enemies = [
-  {x: XOFFSET, y: YOFFSET, w: 60, h: 60, speed: 2,color: "green", current: 0, pixel: 0},
-  {x: XOFFSET, y: YOFFSET, w: 60, h: 60, speed: 5,color: "blue", current: 0, pixel: 0},
-  {x: XOFFSET, y: YOFFSET, w: 60, h: 60, speed: 3,color: "red", current: 0, pixel: 0}
+  {x: XOFFSET, y: YOFFSET, w: 60, h: 60, speed: 1,color: "green", current: 0, pixel: 0},
+  {x: XOFFSET, y: YOFFSET, w: 60, h: 60, speed: 3,color: "blue", current: 0, pixel: 0},
+  {x: XOFFSET, y: YOFFSET, w: 60, h: 60, speed: 2,color: "red", current: 0, pixel: 0}
 ];
 console.log("THIS GUY STIIINKS");
 const level1 = [
@@ -381,7 +381,7 @@ function shoot() {
     return;
   }
   for (let i = 0; i < towers.length; i++) {
-    addBullet({x: 0, y: 0}, towers[i]);
+    addBullet({x: 0, y: 0, w: 60/2, h: 60/2}, towers[i]);
   }
 }
 
@@ -486,9 +486,9 @@ function addBullet(position, tower) {
 }
 
 function updateBullet(bullet, position) {
-  const AVERAGESPEED = 2; // AVG == 2 --> 1.95 is what it comes out to, keep in mind
-  var changeX = (position.x-bullet.x);
-  var changeY = (position.y-bullet.y);
+  const AVERAGESPEED = 3; // AVG == 2 --> 1.95 is what it comes out to, keep in mind
+  var changeX = (position.x+position.w/2-bullet.x);
+  var changeY = (position.y+position.w/2-bullet.y);
 
   changeX /=100;
   changeY /=100;
