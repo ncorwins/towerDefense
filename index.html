@@ -271,6 +271,11 @@ var towers = [{
   y: 80, 
   w: 40, 
   h: 40
+}, {
+  x: 400, 
+  y: 400, 
+  w: 40, 
+  h: 40
 }]
 
 drawTowers();
@@ -389,40 +394,63 @@ function randomN(lower, upper) { // random num gen from min to max (inclusive), 
 //EVENT LISTENERS
 canvas.addEventListener("mousemove", function (event) {
 }, false);
+var avg = [];
+function addBullet(position, tower) {
+  //addBullet(mousePos, towers[1]);
+  const AVERAGESPEED = 2; // AVG == 2 --> 1.95 is what it comes out to, keep in mind
+  var changeX = (position.x-tower.x);
+  var changeY = (position.y-tower.y);
+
+  changeX /=100;
+  changeY /=100;
+
+
+  while (changeX < AVERAGESPEED && changeY < AVERAGESPEED && changeX > 0 && changeY > 0) {
+    changeX *=1.1;
+    changeY *=1.1;
+  }
+  while (changeX > -AVERAGESPEED && changeY > -AVERAGESPEED && changeX < 0 && changeY < 0) {
+    changeX *=1.1;
+    changeY *=1.1;
+  }
+  while (changeX > -AVERAGESPEED && changeY < AVERAGESPEED && changeX < 0 && changeY > 0) {
+    changeX *=1.1;
+    changeY *=1.1;
+  }
+  while (changeX < AVERAGESPEED && changeY > -AVERAGESPEED && changeX > 0 && changeY < 0) {
+    changeX *=1.1;
+    changeY *=1.1;
+  }
+  while (changeX > AVERAGESPEED || changeY > AVERAGESPEED || changeX < -AVERAGESPEED || changeY < -AVERAGESPEED) {
+    changeX /= 1.05;
+    changeY /= 1.05;
+  }
+
+  if (Math.abs(changeX) > Math.abs(changeY)) {
+    avg.push(Math.abs(changeX));
+  }
+  else {
+    avg.push(Math.abs(changeY));
+  }
+
+  bullets.push({
+  x: tower.x, 
+  y: tower.y, 
+  dx: changeX, 
+  dy: changeY, 
+  w: 10, 
+  h: 10
+});
+const average = array => array.reduce((a, b) => a + b) / array.length;
+console.log(average(avg));
+
+}
+
+
 
 canvas.addEventListener('click', function(event) {
   var mousePos = getMousePos(canvas, event);
-
-  var changeX = 55-mousePos.x;
-  var changeY = 95-mousePos.y;
-
-
-  var slope = changeX/changeY;
-  if (mousePos.y <= 95) {
-    slope = slope*-1;
-  }
-  if (slope > 1) {
-      bullets.push({
-    x: 55, 
-    y: 95, 
-    dx: 1, 
-    dy: 1/slope, 
-    w: 10, 
-    h: 10
-  })
-  }
-  else {
-    bullets.push({
-  x: 55, 
-  y: 95, 
-  dx: slope, 
-  dy: 1, 
-  w: 10, 
-  h: 10
-})
-  }
-
-
+  addBullet(mousePos, towers[1]);
 }, false);
 </script>
 
