@@ -48,9 +48,9 @@ var tower = new Image();
 tower.src = "images/tower.png";
 
 var enemies = [
-  {x: XOFFSET, y: YOFFSET, w: 60, h: 60, speed: 5,color: "green", current: 0, pixel: 0},
-  {x: XOFFSET, y: YOFFSET, w: 60, h: 60, speed: 3,color: "blue", current: 0, pixel: 0},
-  {x: XOFFSET, y: YOFFSET, w: 60, h: 60, speed: 4,color: "red", current: 0, pixel: 0}
+  {x: XOFFSET, y: YOFFSET, w: 60, h: 60, speed: 2,color: "green", current: 0, pixel: 0},
+  {x: XOFFSET, y: YOFFSET, w: 60, h: 60, speed: 5,color: "blue", current: 0, pixel: 0},
+  {x: XOFFSET, y: YOFFSET, w: 60, h: 60, speed: 3,color: "red", current: 0, pixel: 0}
 ];
 console.log("THIS GUY STIIINKS");
 const level1 = [
@@ -393,45 +393,38 @@ setInterval(shoot, 50);
 var seconds = 0;
 function Timer() { // game timer
   seconds+=.15;
-  for (let i = 0; i < enemies.length; i++) {
-    if (enemies[i] == null) {
-      continue;
-    }
     for (let x = 0; x < bullets.length; x++) {
-      if (bullets[i] == null) {
+      if (bullets[x] == null) {
         continue;
       }
-        updateBullet(bullets[x], {x: enemies[i].x+enemies[i].w/2, y: enemies[i].y+enemies[i].h/2});
+        if (enemies[bullets[x].twr.target] != null) {
+          updateBullet(bullets[x], enemies[bullets[x].twr.target]);
+        }
+
       }    
-    }
 }
 setInterval(Timer, 15);
 
 function adjustTowers() { // updates target and tower dy dx
-  for (let x = 0; x < towers.length; x++) {
-    if (enemies[towers[x].target] == null) {
-      towers[x].target = -1;
+  var closestEnemy = -1;
+  var maxNum = -1;
+  for (let i = 0; i < enemies.length; i++) {
+    if (enemies[i] == null) {
+      continue;
     }
-    if (enemies.length == 0) {
-      break;
+    if (enemies[i].current > maxNum) {
+      closestEnemy = enemies[i];
+      maxNum = enemies[i].current;
     }
-    for (let i = enemies.length-1; i >= 0; i--) {
-      if (enemies[i] != null) {
-        if (towers[x].target == -1) {
-          towers[x].target = i;
-        }
-
-      }
-      else {
-        continue;
-      }
-    }
-    if (towers[x].target == -1) {
-      break;
-    }
-    towers[x].dx = enemies[towers[x].target].x-towers[x].x;
-    towers[x].dy = enemies[towers[x].target].y-towers[x].y;
   }
+  for (let x = 0; x < towers.length; x++) {
+    if (closestEnemy != -1) {
+      towers[x].target = enemies.indexOf(closestEnemy);
+      towers[x].dx = closestEnemy.x-towers[x].x;
+      towers[x].dy = closestEnemy.y-towers[x].y;
+    }
+  }
+
 
 }
 
@@ -486,12 +479,13 @@ function addBullet(position, tower) {
   dx: 0, 
   dy: 0, 
   w: 10, 
-  h: 10
+  h: 10,
+  twr: tower
 });
-  updateBullet(bullets[bullets.length-1], position, tower);
+  updateBullet(bullets[bullets.length-1], position);
 }
 
-function updateBullet(bullet, position, tower = {x: -1}) {
+function updateBullet(bullet, position) {
   const AVERAGESPEED = 2; // AVG == 2 --> 1.95 is what it comes out to, keep in mind
   var changeX = (position.x-bullet.x);
   var changeY = (position.y-bullet.y);
