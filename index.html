@@ -422,7 +422,6 @@ canvas.addEventListener("mousemove", function (event) {
 
 
 
-var avg = [];
 function addBullet(position, tower) {
 
   bullets.push({
@@ -465,13 +464,6 @@ function updateBullet(bullet, position) {
   while (changeX > AVERAGESPEED || changeY > AVERAGESPEED || changeX < -AVERAGESPEED || changeY < -AVERAGESPEED) {
     changeX /= 1.05;
     changeY /= 1.05;
-  }
-
-  if (Math.abs(changeX) > Math.abs(changeY)) {
-    avg.push(Math.abs(changeX));
-  }
-  else {
-    avg.push(Math.abs(changeY));
   }
 
   bullet.dx = changeX;
