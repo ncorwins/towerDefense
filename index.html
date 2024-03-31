@@ -3,7 +3,7 @@
 <title>Tower Defense</title>
 <body>
 <body style="background-color:white;">
-  <canvas id="myCanvas" width='900' height='600' style="background-color:#d4f6ff"></canvas>
+  <canvas id="myCanvas" width='1200' height='900' style="background-color:#d4f6ff"></canvas>
 </body>
 <style>
 
@@ -11,8 +11,8 @@ canvas {
     padding: 0;
     margin: auto;
     display: block;
-    width: 900px;
-    height: 600px;
+    width: 1200px;
+    height: 900px;
     position: absolute;
     top: 0;
     bottom: 0;
@@ -35,10 +35,18 @@ var canvas = document.getElementById("myCanvas");
 var c = canvas.getContext("2d");
 c.font = "30px ArcadeClassic";
 
+const NUMCOLS = 15;
+const NUMROWS = 10;
+const GAMEWIDTH = 900;
+const GAMEHEIGHT = 600;
+const XOFFSET = (canvas.width-GAMEWIDTH)/2;
+const YOFFSET = (canvas.height-GAMEHEIGHT)/2;
+
+
 var enemies = [
-  {x: 0, y: 0, w: 60, h: 60, speed: .5,color: "green", current: 0, pixel: 0},
-  {x: 0, y: 0, w: 60, h: 60, speed: 1,color: "blue", current: 0, pixel: 0},
-  {x: 0, y: 0, w: 60, h: 60, speed: 2,color: "red", current: 0, pixel: 0}
+  {x: XOFFSET, y: YOFFSET, w: 60, h: 60, speed: .5,color: "green", current: 0, pixel: 0},
+  {x: XOFFSET, y: YOFFSET, w: 60, h: 60, speed: 1,color: "blue", current: 0, pixel: 0},
+  {x: XOFFSET, y: YOFFSET, w: 60, h: 60, speed: 2,color: "red", current: 0, pixel: 0}
 ];
 console.log("THIS GUY STIIINKS");
 const level1 = [
@@ -123,8 +131,7 @@ var startCoord = null;
 var previous = [];
 var tracker = 0;
 var lockedPath = "NONE";
-const NUMCOLS = 15;
-const NUMROWS = 10;
+
 
 function pathFind(selectedLevelMap, startSq) {
   while (!pathFound) {
@@ -212,8 +219,8 @@ function createDirections() {
         currentRow++;
       }
       coords.push({
-        x: (i % NUMCOLS)*60,
-        y: (currentRow)*60,
+        x: XOFFSET + (i % NUMCOLS)*60,
+        y: YOFFSET + (currentRow)*60,
         w: 60,
         h: 60,
         value: selectedLevelMap[i],
@@ -253,6 +260,7 @@ function drawBullets() {
 }
 
 function drawBackground() {
+  c.clearRect(0,0,canvas.width, canvas.height);
   currentRow = 0;
   for (let i = 0; i < selectedLevelMap.length; i++) {
     if (i != 0 && i % NUMCOLS == 0) {
@@ -264,18 +272,13 @@ function drawBackground() {
     else {
       c.fillStyle = "white";
     }
-    c.fillRect((i % NUMCOLS)*60, (currentRow)*60, canvas.width / NUMROWS, canvas.height / NUMROWS);
+    c.fillRect(XOFFSET + (i % NUMCOLS)*60, YOFFSET + (currentRow)*60, GAMEWIDTH / NUMCOLS, GAMEHEIGHT / NUMROWS);
   }
   window.requestAnimationFrame(drawBackground);
 }
 drawBackground();
 
 var towers = [{
-  x: 40, 
-  y: 60, 
-  w: 40, 
-  h: 40
-}, {
   x: 400, 
   y: 400, 
   w: 40, 
@@ -479,7 +482,7 @@ function updateBullet(bullet, position) {
 
 canvas.addEventListener('click', function(event) {
   var mousePos = getMousePos(canvas, event);
-  addBullet(mousePos, towers[1]);
+  addBullet(mousePos, towers[towers.length-1]);
 }, false);
 </script>
 
