@@ -3,7 +3,7 @@
 <title>Tower Defense</title>
 <body>
 <body style="background-color:white;">
-  <canvas id="myCanvas" width='800' height='800' style="background-color:#d4f6ff"></canvas>
+  <canvas id="myCanvas" width='900' height='600' style="background-color:#d4f6ff"></canvas>
 </body>
 <style>
 
@@ -11,8 +11,8 @@ canvas {
     padding: 0;
     margin: auto;
     display: block;
-    width: 800px;
-    height: 800px;
+    width: 900px;
+    height: 600px;
     position: absolute;
     top: 0;
     bottom: 0;
@@ -36,22 +36,22 @@ var c = canvas.getContext("2d");
 c.font = "30px ArcadeClassic";
 
 var enemies = [
-  {x: 0, y: 0, w: 80, h: 80, speed: 1,color: "green", current: 0, pixel: 0},
-  {x: 0, y: 0, w: 80, h: 80, speed: 3,color: "blue", current: 0, pixel: 0},
-  {x: 0, y: 0, w: 80, h: 80, speed: 4,color: "red", current: 0, pixel: 0}
+  {x: 0, y: 0, w: 60, h: 60, speed: .5,color: "green", current: 0, pixel: 0},
+  {x: 0, y: 0, w: 60, h: 60, speed: 1,color: "blue", current: 0, pixel: 0},
+  {x: 0, y: 0, w: 60, h: 60, speed: 2,color: "red", current: 0, pixel: 0}
 ];
 console.log("THIS GUY STIIINKS");
 const level1 = [
-1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 
-0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 
-1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 
-1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 
-1, 0, 0, 0, 1, 0, 1, 1, 1, 1, 
-1, 1, 1, 0, 1, 0, 0, 0, 0, 1, 
-0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 
-1, 1, 1, 0, 1, 0, 0, 1, 1, 1, 
-1, 0, 0, 0, 1, 0, 1, 1, 0, 0, 
-1, 1, 1, 1, 1, 0, 1, 0, 0, 0];
+1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 
+0, 0, 1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 1, 
+1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 
+1, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 
+1, 0, 1, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 
+1, 0, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 
+1, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 
+1, 0, 0, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 
+1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 
+1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0];
 const level1SS = [0,0];
 
 const level2 = [
@@ -123,7 +123,8 @@ var startCoord = null;
 var previous = [];
 var tracker = 0;
 var lockedPath = "NONE";
-
+const NUMCOLS = 15;
+const NUMROWS = 10;
 
 function pathFind(selectedLevelMap, startSq) {
   while (!pathFound) {
@@ -133,26 +134,28 @@ function pathFind(selectedLevelMap, startSq) {
       pathCoords.push(previous);
       continue;
     }
-    tracker = previous[0] + previous[1] * 10;
+    tracker = previous[0] + previous[1] * NUMCOLS;
     // LOOK UP
+
     if (pathCoords.length == instances) {
       pathFound = true;
       break;
     }
-    if (tracker > 9) {
+    if (tracker > NUMCOLS-1) {
       if (lockedPath != "UP") {
-        if (selectedLevelMap[tracker - 10] == 1) {
-          previous = [tracker % 10, previous[1] - 1];
+        if (selectedLevelMap[tracker - NUMCOLS] == 1) {
+          previous = [tracker % NUMCOLS, previous[1] - 1];
           pathCoords.push(previous);
           lockedPath = "DOWN";
           continue;
         }
       }
     }
-    if (tracker < 90) {  // LOOK DOWN
+
+    if (tracker < NUMCOLS*(NUMROWS-1)) {  // LOOK DOWN
       if (lockedPath != "DOWN") {
-        if (selectedLevelMap[tracker + 10] == 1) {
-          previous = [tracker % 10, previous[1] + 1];
+        if (selectedLevelMap[tracker + NUMCOLS] == 1) {
+          previous = [tracker % NUMCOLS, previous[1] + 1];
           pathCoords.push(previous);
           lockedPath = "UP";
           continue;
@@ -160,10 +163,10 @@ function pathFind(selectedLevelMap, startSq) {
       }
 
     }  // LOOK LEFT
-    if (tracker % 10 != 0) {
+    if (tracker % NUMCOLS != 0) {
       if (lockedPath != "LEFT") {
         if (selectedLevelMap[tracker - 1] == 1) {
-          previous = [tracker % 10 - 1, previous[1]];
+          previous = [tracker % NUMCOLS - 1, previous[1]];
           pathCoords.push(previous);
           lockedPath = "RIGHT";
           continue;
@@ -171,10 +174,11 @@ function pathFind(selectedLevelMap, startSq) {
       }
 
     }
-    if (tracker % 10 != 9) {  // LOOK RIGHT
+
+    if (tracker % NUMCOLS != NUMCOLS-1) {  // LOOK RIGHT
       if (lockedPath != "RIGHT") {
         if (selectedLevelMap[tracker + 1] == 1) {
-          previous = [tracker % 10 + 1, previous[1]];
+          previous = [tracker % NUMCOLS + 1, previous[1]];
           pathCoords.push(previous);
           lockedPath = "LEFT";
           continue;
@@ -198,26 +202,25 @@ function drawTowers() {
 
 var coords = [];
 var directions = [];
-var rows = 10;
 var currentRow = 0;
 
 
 function createDirections() {
   for (let i = 0; i < selectedLevelMap.length; i++) {
-    if (i != 0 && i % rows == 0) {
+    if (i != 0 && i % NUMCOLS == 0) {
         console.log(i);
         currentRow++;
       }
       coords.push({
-        x: (i % rows)*80,
-        y: (currentRow)*80,
-        w: 80,
-        h: 80,
+        x: (i % NUMCOLS)*60,
+        y: (currentRow)*60,
+        w: 60,
+        h: 60,
         value: selectedLevelMap[i],
-        rx: i % 10,
+        rx: i % NUMCOLS,
         ry: currentRow
       });
-      //c.fillRect((i % rows)*80, (currentRow)*80, 80, 80);
+      //c.fillRect((i % rows)*60, (currentRow)*60, 60, 60);
     }
 
   for (let i = 0; i < pathCoords.length; i++) {
@@ -228,6 +231,7 @@ function createDirections() {
       }
     }
   }
+  console.log(directions);
 
 }
 
@@ -251,7 +255,7 @@ function drawBullets() {
 function drawBackground() {
   currentRow = 0;
   for (let i = 0; i < selectedLevelMap.length; i++) {
-    if (i != 0 && i % rows == 0) {
+    if (i != 0 && i % NUMCOLS == 0) {
       currentRow++;
     }
     if (selectedLevelMap[i] == 0) {
@@ -260,7 +264,7 @@ function drawBackground() {
     else {
       c.fillStyle = "white";
     }
-    c.fillRect((i % rows)*80, (currentRow)*80, canvas.width / rows, canvas.height / rows);
+    c.fillRect((i % NUMCOLS)*60, (currentRow)*60, canvas.width / NUMROWS, canvas.height / NUMROWS);
   }
   window.requestAnimationFrame(drawBackground);
 }
@@ -268,7 +272,7 @@ drawBackground();
 
 var towers = [{
   x: 40, 
-  y: 80, 
+  y: 60, 
   w: 40, 
   h: 40
 }, {
@@ -336,7 +340,7 @@ function moveEnemies() {
     enemies[i].pixel+=enemies[i].speed;
 
 
-    if (enemies[i].pixel >= 80) {
+    if (enemies[i].pixel >= 60) {
       enemies[i].current++;
       if (enemies[i].current == directions.length-1) {
         enemies[i] = null;
@@ -358,9 +362,22 @@ drawEnemies();
 moveEnemies();
 
 //HELPER FUNCTIONS
+var seconds = 0;
 function Timer() { // game timer
   seconds+=.15;
+  for (let i = 0; i < enemies.length; i++) {
+    if (enemies[i] == null) {
+      continue;
+    }
+    for (let x = 0; x < bullets.length; x++) {
+      if (bullets[i] == null) {
+        continue;
+      }
+        updateBullet(bullets[x], {x: enemies[i].x+enemies[i].w/2, y: enemies[i].y+enemies[i].h/2});
+      }    
+    }
 }
+setInterval(Timer, 15);
 
 function getRandomIntInclusive(min, max) { // random function for ghost movement, returns integers
   min = Math.ceil(min);
@@ -393,13 +410,34 @@ function randomN(lower, upper) { // random num gen from min to max (inclusive), 
 
 //EVENT LISTENERS
 canvas.addEventListener("mousemove", function (event) {
+  var mousePos = getMousePos(canvas, event);
+  //updateBullet(bullets[bullets.length-1], mousePos);
+
+
+
 }, false);
+
+
+
 var avg = [];
 function addBullet(position, tower) {
-  //addBullet(mousePos, towers[1]);
+
+  bullets.push({
+  x: tower.x, 
+  y: tower.y, 
+  dx: 0, 
+  dy: 0, 
+  w: 10, 
+  h: 10
+});
+  updateBullet(bullets[bullets.length-1], position);
+
+}
+
+function updateBullet(bullet, position) {
   const AVERAGESPEED = 2; // AVG == 2 --> 1.95 is what it comes out to, keep in mind
-  var changeX = (position.x-tower.x);
-  var changeY = (position.y-tower.y);
+  var changeX = (position.x-bullet.x);
+  var changeY = (position.y-bullet.y);
 
   changeX /=100;
   changeY /=100;
@@ -433,17 +471,8 @@ function addBullet(position, tower) {
     avg.push(Math.abs(changeY));
   }
 
-  bullets.push({
-  x: tower.x, 
-  y: tower.y, 
-  dx: changeX, 
-  dy: changeY, 
-  w: 10, 
-  h: 10
-});
-const average = array => array.reduce((a, b) => a + b) / array.length;
-console.log(average(avg));
-
+  bullet.dx = changeX;
+  bullet.dy = changeY;
 }
 
 
