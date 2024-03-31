@@ -192,7 +192,6 @@ function drawTower(x, y, width, height) {
     c.fillRect(x, y, width, height);
     requestAnimationFrame(drawTower);
 }
-var gunner = new Gunner(10, -10, 10, 10);
 var coords = [];
 var directions = [];
 var rows = 10;
@@ -238,7 +237,7 @@ function drawBullet(x, y, dx, dy, width, height) {
 function drawBackground() {
   currentRow = 0;
   for (let i = 0; i < selectedLevelMap.length; i++) {
-    if (i % rows == 0) {
+    if (i != 0 && i % rows == 0) {
       currentRow++;
     }
     if (selectedLevelMap[i] == 0) {
