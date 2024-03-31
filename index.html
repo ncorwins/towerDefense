@@ -107,12 +107,14 @@ var startingSquare = level1SS;
 */
 // USE https://gube.live/pingu/grid-template/
 var instances = 0;
-
+function calcInstances() {
   for (let i = 0; i < selectedLevelMap.length; i++) {
     if (selectedLevelMap[i] == 1) {
       instances++;
     }
   }
+}
+calcInstances();
 
 
 var pathCoords = [];
@@ -121,6 +123,8 @@ var startCoord = null;
 var previous = [];
 var tracker = 0;
 var lockedPath = "NONE";
+
+
 function pathFind(selectedLevelMap, startSq) {
   while (!pathFound) {
     if (startCoord == null) {
@@ -182,56 +186,66 @@ function pathFind(selectedLevelMap, startSq) {
 
   }
 }
-pathFind(level1, level1SS);
-
-  /*////////////////////////////////
-  ---------------MAIN---------------
-  */////////////////////////////////
-function drawTower(x, y, width, height) {
+function drawTowers() {
     c.fillStyle = "red";
-    c.fillRect(x, y, width, height);
-    requestAnimationFrame(drawTower);
+    for (let i = 0; i < towers.length; i++) {
+      c.fillRect(towers[i].x, towers[i].y, towers[i].w, towers[i].h);
+    }
+
+  window.requestAnimationFrame(drawTowers);
 }
+
+
 var coords = [];
 var directions = [];
 var rows = 10;
 var currentRow = 0;
-for (let i = 0; i < selectedLevelMap.length; i++) {
-  if (i != 0 && i % rows == 0) {
-      console.log(i);
-      currentRow++;
+
+
+function createDirections() {
+  for (let i = 0; i < selectedLevelMap.length; i++) {
+    if (i != 0 && i % rows == 0) {
+        console.log(i);
+        currentRow++;
+      }
+      coords.push({
+        x: (i % rows)*80,
+        y: (currentRow)*80,
+        w: 80,
+        h: 80,
+        value: selectedLevelMap[i],
+        rx: i % 10,
+        ry: currentRow
+      });
+      //c.fillRect((i % rows)*80, (currentRow)*80, 80, 80);
     }
-    coords.push({
-      x: (i % rows)*80,
-      y: (currentRow)*80,
-      w: 80,
-      h: 80,
-      value: selectedLevelMap[i],
-      rx: i % 10,
-      ry: currentRow
-    });
-    //c.fillRect((i % rows)*80, (currentRow)*80, 80, 80);
+
+  for (let i = 0; i < pathCoords.length; i++) {
+    for (let x = 0; x < coords.length; x++) {
+      if (pathCoords[i][0] == coords[x].rx && pathCoords[i][1] == coords[x].ry) {
+        directions.push(coords[x]);
+        continue;
+      }
+    }
   }
 
-for (let i = 0; i < pathCoords.length; i++) {
-  for (let x = 0; x < coords.length; x++) {
-    if (pathCoords[i][0] == coords[x].rx && pathCoords[i][1] == coords[x].ry) {
-      directions.push(coords[x]);
-      continue;
-    }
-  }
 }
 
 
+pathFind(level1, level1SS);
+createDirections();
 
 
-function drawBullet(x, y, dx, dy, width, height) {
-  c.clearRect(x, y, width, height);
+
+function drawBullets() {
   c.fillStyle = "green";
-  c.fillRect(x, y, width, height);
-  x += dx;
-  y += dy;
-  requestAnimationFrame(drawBullet);
+  for (let i = 0; i < bullets.length; i++) {
+    c.fillRect(bullets[i].x, bullets[i].y, bullets[i].w, bullets[i].h);
+    bullets[i].x += bullets[i].dx;
+    bullets[i].y += bullets[i].dy;
+  }
+
+  window.requestAnimationFrame(drawBullets);
 }
 
 function drawBackground() {
@@ -248,12 +262,30 @@ function drawBackground() {
     }
     c.fillRect((i % rows)*80, (currentRow)*80, canvas.width / rows, canvas.height / rows);
   }
-  requestAnimationFrame(drawBackground);
+  window.requestAnimationFrame(drawBackground);
 }
 drawBackground();
 
-drawTower(40, 80, 40, 40);
-drawBullet(55, 95, 1, 1, 10, 10)
+var towers = [{
+  x: 40, 
+  y: 80, 
+  w: 40, 
+  h: 40
+}]
+
+drawTowers();
+
+var bullets = [{
+  x: 55, 
+  y: 95, 
+  dx: 1, 
+  dy: 1, 
+  w: 10, 
+  h: 10
+}]
+
+
+drawBullets()
 
 function drawEnemies() {
   for (let i = 0; i < enemies.length; i++) {
@@ -278,13 +310,6 @@ function moveEnemies() {
       enemies[i] = null;
       continue;
     }
-    if (enemies[i].current == 0) {
-      if (directions.length > 0) {
-        enemies[i].x = directions[1].x;
-        enemies[i].y = -80 + enemies[i].pixel;
-      }
-    }
-    else {
         if (directions[enemies[i].current].x < directions[enemies[i].current+1].x) {
           enemies[i].x+=enemies[i].speed;
 
@@ -302,7 +327,6 @@ function moveEnemies() {
 
         }
 
-    }
 
     enemies[i].pixel+=enemies[i].speed;
 
@@ -324,15 +348,9 @@ function moveEnemies() {
   }
   window.requestAnimationFrame(moveEnemies);
 }
+
 drawEnemies();
 moveEnemies();
-
-function Timer() { // game timer
-    seconds+=.15;
-
-}
-
-console.log(coords);
 
 //HELPER FUNCTIONS
 function Timer() { // game timer
@@ -373,6 +391,38 @@ canvas.addEventListener("mousemove", function (event) {
 }, false);
 
 canvas.addEventListener('click', function(event) {
+  var mousePos = getMousePos(canvas, event);
+
+  var changeX = 55-mousePos.x;
+  var changeY = 95-mousePos.y;
+
+
+  var slope = changeX/changeY;
+  if (mousePos.y <= 95) {
+    slope = slope*-1;
+  }
+  if (slope > 1) {
+      bullets.push({
+    x: 55, 
+    y: 95, 
+    dx: 1, 
+    dy: 1/slope, 
+    w: 10, 
+    h: 10
+  })
+  }
+  else {
+    bullets.push({
+  x: 55, 
+  y: 95, 
+  dx: slope, 
+  dy: 1, 
+  w: 10, 
+  h: 10
+})
+  }
+
+
 }, false);
 </script>
 
