@@ -40,24 +40,160 @@ var enemies = [
   {x: 0, y: 0, w: 80, h: 80, speed: 3,color: "blue", current: 0, pixel: 0},
   {x: 0, y: 0, w: 80, h: 80, speed: 4,color: "red", current: 0, pixel: 0}
 ];
-
+console.log("THIS GUY STIIINKS");
 const level1 = [
-0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 
+1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 
+0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 
+1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 
+1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 
+1, 0, 0, 0, 1, 0, 1, 1, 1, 1, 
+1, 1, 1, 0, 1, 0, 0, 0, 0, 1, 
+0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 
+1, 1, 1, 0, 1, 0, 0, 1, 1, 1, 
+1, 0, 0, 0, 1, 0, 1, 1, 0, 0, 
+1, 1, 1, 1, 1, 0, 1, 0, 0, 0];
+const level1SS = [0,0];
+
+const level2 = [
+1, 0, 0, 1, 1, 1, 0, 1, 1, 1, 
+1, 0, 0, 1, 0, 1, 0, 1, 0, 1, 
+1, 0, 0, 1, 0, 1, 0, 1, 0, 1, 
+1, 0, 0, 1, 0, 1, 0, 1, 0, 1, 
+1, 0, 0, 1, 0, 1, 1, 1, 0, 1, 
+1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 
+1, 0, 0, 1, 1, 0, 1, 1, 1, 1, 
+1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 
+1, 0, 0, 0, 1, 0, 1, 0, 1, 1, 
+1, 1, 1, 1, 1, 0, 1, 1, 1, 0]; // top left is 0,0 btm right is 9,9
+var level2SS = [0,0];
+
+const level3 = [
+1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 
 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 
 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 
+0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 
 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 
 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 
 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 
-0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 
-0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 
-0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 
-0, 0, 0, 0, 0, 0, 0, 0, 1, 0];
+0, 0, 0, 0, 0, 1, 1, 1, 1, 1];
+var level3SS = [0,0];
+
+const level4 = [
+1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 
+0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 
+0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 
+0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 
+0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 
+0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 
+0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 
+1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 
+1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 
+1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+var level4SS = [0,0];
+
+
+
+
+var selectedLevelMap = level1;
+var startingSquare = level1SS;
+
+
+
+
+/*
+0  1  2  3  4  5  6  7  8  9
+*/
 // USE https://gube.live/pingu/grid-template/
+var instances = 0;
+
+  for (let i = 0; i < selectedLevelMap.length; i++) {
+    if (selectedLevelMap[i] == 1) {
+      instances++;
+    }
+  }
+
+
+var pathCoords = [];
+var pathFound = false;
+var startCoord = null;
+var previous = [];
+var tracker = 0;
+var lockedPath = "NONE";
+function pathFind(selectedLevelMap, startSq) {
+  while (!pathFound) {
+    if (startCoord == null) {
+      previous = [startSq[0], startSq[1]];
+      startCoord = previous;
+      pathCoords.push(previous);
+      continue;
+    }
+    tracker = previous[0] + previous[1] * 10;
+    // LOOK UP
+    if (pathCoords.length == instances) {
+      pathFound = true;
+      break;
+    }
+    if (tracker > 9) {
+      if (lockedPath != "UP") {
+        if (selectedLevelMap[tracker - 10] == 1) {
+          previous = [tracker % 10, previous[1] - 1];
+          pathCoords.push(previous);
+          lockedPath = "DOWN";
+          continue;
+        }
+      }
+    }
+    if (tracker < 90) {  // LOOK DOWN
+      if (lockedPath != "DOWN") {
+        if (selectedLevelMap[tracker + 10] == 1) {
+          previous = [tracker % 10, previous[1] + 1];
+          pathCoords.push(previous);
+          lockedPath = "UP";
+          continue;
+        }
+      }
+
+    }  // LOOK LEFT
+    if (tracker % 10 != 0) {
+      if (lockedPath != "LEFT") {
+        if (selectedLevelMap[tracker - 1] == 1) {
+          previous = [tracker % 10 - 1, previous[1]];
+          pathCoords.push(previous);
+          lockedPath = "RIGHT";
+          continue;
+        }
+      }
+
+    }
+    if (tracker % 10 != 9) {  // LOOK RIGHT
+      if (lockedPath != "RIGHT") {
+        if (selectedLevelMap[tracker + 1] == 1) {
+          previous = [tracker % 10 + 1, previous[1]];
+          pathCoords.push(previous);
+          lockedPath = "LEFT";
+          continue;
+        }
+      }
+
+    }
+
+
+  }
+}
+pathFind(level1, level1SS);
+
+console.log(pathCoords);
+
+
+
+
 class Enemy {
   constructor(x, y, width, height) {
     this.x = x;
     this.y = y;
-    this.width = width;
+    this.width = width; 
     this.height = height;
   }
 }
@@ -92,52 +228,47 @@ var coords = [];
 var directions = [];
 var rows = 10;
 var currentRow = 0;
-for (let i = 0; i < level1.length; i++) {
-    if (i % rows == 0) {
+for (let i = 0; i < selectedLevelMap.length; i++) {
+  if (i != 0 && i % rows == 0) {
+      console.log(i);
       currentRow++;
-    }
-    if (level1[i] == 0) {
-      c.fillStyle = "black";
-    }
-    else {
-      c.fillStyle = "purple";
     }
     coords.push({
       x: (i % rows)*80,
-      y: (currentRow-1)*80,
+      y: (currentRow)*80,
       w: 80,
       h: 80,
-      value: level1[i],
+      value: selectedLevelMap[i],
+      rx: i % 10,
+      ry: currentRow
     });
-    c.fillRect((i % rows)*80, (currentRow-1)*80, 80, 80);
+    //c.fillRect((i % rows)*80, (currentRow)*80, 80, 80);
   }
-  for (let i = 0; i < coords.length; i++) {
-    if (coords[i].value != 0) {
-      directions.push(coords[i]);
+
+for (let i = 0; i < pathCoords.length; i++) {
+  for (let x = 0; x < coords.length; x++) {
+    if (pathCoords[i][0] == coords[x].rx && pathCoords[i][1] == coords[x].ry) {
+      directions.push(coords[x]);
+      continue;
     }
   }
-  directions.push({
-        x: directions[directions.length-1].x,
-        y: directions[directions.length-1].y+80,
-        w: 80,
-        h: 80,
-        value: 1}); // handles going down at end
+}
 
 
 
 
-console.log(coords);
+
 function drawBackground() {
   currentRow = 0;
-  for (let i = 0; i < level1.length; i++) {
+  for (let i = 0; i < selectedLevelMap.length; i++) {
     if (i % rows == 0) {
       currentRow++;
     }
-    if (level1[i] == 0) {
+    if (selectedLevelMap[i] == 0) {
       c.fillStyle = "black";
     }
     else {
-      c.fillStyle = "purple";
+      c.fillStyle = "white";
     }
     c.fillRect((i % rows)*80, (currentRow-1)*80, 80, 80);
   }
@@ -164,47 +295,64 @@ function drawEnemies() {
 }
 
 function moveEnemies() {
+  if (directions.length == 0) {
+        return;
+      }
   for (let i = 0; i < enemies.length; i++) {
     if (enemies[i] == null) {
       continue;
     }
-    if (enemies[i].current == directions.length-1) {
+    if (enemies[i].current == directions.length) {
       enemies[i] = null;
       continue;
     }
     if (enemies[i].current == 0) {
-      enemies[i].x = directions[1].x;
-      enemies[i].y = -80 + enemies[i].pixel;
+      if (directions.length > 0) {
+        enemies[i].x = directions[1].x;
+        enemies[i].y = -80 + enemies[i].pixel;
+      }
     }
     else {
-      if (directions[enemies[i].current].x < directions[enemies[i].current+1].x) {
-        enemies[i].x+=enemies[i].speed;
-      }
-      if (directions[enemies[i].current].x > directions[enemies[i].current+1].x) {
-        enemies[i].x-=enemies[i].speed;
-      }
-      if (directions[enemies[i].current].y < directions[enemies[i].current+1].y) {
-        enemies[i].y+=enemies[i].speed;
-      }
-      if (directions[enemies[i].current].y > directions[enemies[i].current+1].y) {
-        enemies[i].y-=enemies[i].speed;
-      }
+        if (directions[enemies[i].current].x < directions[enemies[i].current+1].x) {
+          enemies[i].x+=enemies[i].speed;
+
+        }
+        else if (directions[enemies[i].current].x > directions[enemies[i].current+1].x) {
+          enemies[i].x-=enemies[i].speed;
+
+        }
+        else if (directions[enemies[i].current].y < directions[enemies[i].current+1].y) {
+          enemies[i].y+=enemies[i].speed;
+
+        }
+        else if (directions[enemies[i].current].y > directions[enemies[i].current+1].y) {
+          enemies[i].y-=enemies[i].speed;
+
+        }
+
     }
 
     enemies[i].pixel+=enemies[i].speed;
 
 
     if (enemies[i].pixel >= 80) {
-        enemies[i].current++;
-        enemies[i].x = directions[enemies[i].current].x;
-        enemies[i].y = directions[enemies[i].current].y;
+      enemies[i].current++;
+      if (enemies[i].current == directions.length-1) {
+        enemies[i] = null;
+        continue;
+      }
+        if (directions.length > 0 && enemies[i].current < directions.length) {
+          enemies[i].x = directions[enemies[i].current].x;
+          enemies[i].y = directions[enemies[i].current].y;
+        }
+
         enemies[i].pixel = 0;
       }
 
   }
-  console.log(enemies);
   window.requestAnimationFrame(moveEnemies);
 }
+drawEnemies();
 moveEnemies();
 
 function Timer() { // game timer
@@ -212,8 +360,8 @@ function Timer() { // game timer
 
 }
 
+console.log(coords);
 
-drawEnemies();
 
 function getRandomIntInclusive(min, max) { // random function for ghost movement, returns integers
   min = Math.ceil(min);
