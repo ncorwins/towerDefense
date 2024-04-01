@@ -67,33 +67,18 @@ const level1 = [
 const level1SS = [0,0];
 
 
-var towers = [{
-  x: 450, 
-  y: 400, 
-  w: 60, 
-  h: 60,
-  dy: 0,
-  dx: 0,
-  target: -1,
-  blankimg: empty,
-  img: tower
-},
-{
-  x: 700, 
-  y: 650, 
-  w: 60, 
-  h: 60,
-  dy: 0,
-  dx: 0,
-  target: -1,
-  blankimg: empty,
-  img: tower
-}]
+var towers = []
 
 
 
 var bullets = []
-
+var heroButtons = [{
+  x: 50, 
+  y: 150, 
+  w: 60,
+  h: 60,
+  imgs: [empty, tower]
+}]
 
 var selectedLevelMap = level1;
 var startingSquare = level1SS;
@@ -122,6 +107,7 @@ var startCoord = null;
 var previous = [];
 var tracker = 0;
 var lockedPath = "NONE";
+var tmp = null;
 
 
 function pathFind(selectedLevelMap, startSq) {
@@ -304,12 +290,7 @@ function drawBackground() {
   }
   window.requestAnimationFrame(drawBackground);
 }
-drawBackground();
 
-
-
-drawBullets()
-drawTowers();
 function drawEnemies() {
   for (let i = 0; i < enemies.length; i++) {
     if (enemies[i] == null) {
@@ -372,6 +353,24 @@ function moveEnemies() {
   window.requestAnimationFrame(moveEnemies);
 }
 
+function drawHeroButtons() {
+  for (let i = 0; i < heroButtons.length; i++) {
+    for (let x = 0; x < heroButtons[i].imgs.length; x++) {
+      c.drawImage(heroButtons[i].imgs[x], heroButtons[i].x, heroButtons[i].y, heroButtons[i].w, heroButtons[i].h);
+    }
+  }
+  if (tmp != null) {
+    for (let x = 0; x < tmp.imgs.length; x++) {
+      c.drawImage(tmp.imgs[x], tmp.x, tmp.y, tmp.w, tmp.h);
+    }
+  }
+  window.requestAnimationFrame(drawHeroButtons);
+}
+
+drawBackground();
+drawHeroButtons();
+drawBullets()
+drawTowers();
 drawEnemies();
 moveEnemies();
 
@@ -384,10 +383,6 @@ function shoot() {
     addBullet({x: 0, y: 0, w: 60/2, h: 60/2}, towers[i]);
   }
 }
-
-
-
-setInterval(shoot, 50);
 
 //HELPER FUNCTIONS
 var seconds = 0;
@@ -403,7 +398,7 @@ function Timer() { // game timer
 
       }    
 }
-setInterval(Timer, 15);
+
 
 function adjustTowers() { // updates target and tower dy dx
   var closestEnemy = -1;
@@ -429,6 +424,8 @@ function adjustTowers() { // updates target and tower dy dx
 }
 
 
+setInterval(shoot, 50);
+setInterval(Timer, 15);
 setInterval(adjustTowers, 10);
 
 function getRandomIntInclusive(min, max) { // random function for ghost movement, returns integers
@@ -460,14 +457,93 @@ function randomN(lower, upper) { // random num gen from min to max (inclusive), 
   return Math.random() * (upper - lower) + lower;
 }
 
+function snap() {
+  var snapX = tmp.x+tmp.w/2;
+  var snapY = tmp.y+tmp.h/2;
+  var found = false;
+
+  for (let i = 0; i < coords.length; i++) {
+    if (coords[i].value == 0) {
+      var coordX = coords[i].x+coords[i].w/2;
+      var coordY = coords[i].y+coords[i].h/2;
+
+      if ((coordX + 30 > snapX && coordX < snapX) || (coordX - 30 < snapX && coordX > snapX)) {
+        if ((coordY + 30 > snapY && coordY < snapY) || (coordY - 30 < snapY && coordY > snapY)) {
+          tmp.x = coords[i].x;
+          tmp.y = coords[i].y;
+          found = true;
+        }
+      }
+    }
+  }
+  for (let i = 0; i < towers.length; i++) {
+    if (towers[i].x == tmp.x && towers[i].y == tmp.y) {
+      tmp = null;
+    }
+  }
+
+  if (!found) {
+    tmp = null;
+  }
+}
+
+
+
 //EVENT LISTENERS
 canvas.addEventListener("mousemove", function (event) {
   var mousePos = getMousePos(canvas, event);
   //updateBullet(bullets[bullets.length-1], mousePos);
+  if (tmp != null) {
+    tmp.x = mousePos.x-tmp.w/2;
+    tmp.y = mousePos.y-tmp.h/2;
+  }
+}, false);
 
+canvas.addEventListener("mouseup", function (event) {
+  var mousePos = getMousePos(canvas, event);
+  if (tmp != null) {
+    snap();
+    if (tmp != null) {
+      towers.push({
+        x: tmp.x,
+        y: tmp.y,
+        w: tmp.w,
+        h: tmp.h,
+        target: -1,
+        blankimg: empty,
+        img: tower
+
+      });
+    }
+
+  }
+  tmp = null;
+  //updateBullet(bullets[bullets.length-1], mousePos);
+}, false);
+
+canvas.addEventListener("mousedown", function (event) {
+  var mousePos = getMousePos(canvas, event);
+  var selectedHero = isInside(mousePos, heroButtons);
+  if (selectedHero == null) {
+    tmp = null;
+    return;
+  }
+  tmp = {
+    x: selectedHero.x,
+    y: selectedHero.y,
+    w: selectedHero.w, 
+    h: selectedHero.h,
+    imgs: selectedHero.imgs
+  }
+  tmp.x = mousePos.x-tmp.w/2;
+  tmp.y = mousePos.y-tmp.h/2;
 
 
 }, false);
+
+
+
+
 
 
 
