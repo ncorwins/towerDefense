@@ -45,14 +45,16 @@ const XOFFSET = (canvas.width-GAMEWIDTH)/2;
 const YOFFSET = (canvas.height-GAMEHEIGHT)/2;
 
 // GAMEPLAY MECHANICS
+const GAMESPEED = .25;
 const CANNONRANGE = 20;
-const GUNNERSPEED = 4;
-const CANNONSPEED = 2;
-const CANNONFIRERATE = 500;
-const GUNNERFIRERATE = 100;
+const GUNNERSPEED = 5*GAMESPEED;
+const CANNONSPEED = 2*GAMESPEED;
+const CANNONFIRERATE = 500*(1/GAMESPEED);
+const GUNNERFIRERATE = 100*(1/GAMESPEED);
 const ENEMYSIZE = 70;
 
-var waveCount = 1;
+
+var waveCount = 0;
 
 var emptyblank = new Image();
 emptyblank.src = "images/greyblank.png";
@@ -183,11 +185,11 @@ var rocketTypes = [
     y: YOFFSET, 
     w: BOXWH, 
     h: BOXWH, 
-    speed: 2, 
+    speed: 2*GAMESPEED, 
     color: redEI,
     current: 0, 
     pixel: 0, 
-    health: 2, 
+    health: 1, 
   },
   {
     desc: "blue, FAST",
@@ -196,7 +198,7 @@ var rocketTypes = [
     y: YOFFSET, 
     w: BOXWH, 
     h: BOXWH, 
-    speed: 4, 
+    speed: 4*GAMESPEED, 
     color: blueEI,
     current: 0, 
     pixel: 0,
@@ -209,7 +211,7 @@ var rocketTypes = [
     y: YOFFSET, 
     w: BOXWH, 
     h: BOXWH, 
-    speed: 1, 
+    speed: 1*GAMESPEED, 
     color: greenEI,
     current: 0, 
     pixel: 0,
@@ -222,7 +224,7 @@ var rocketTypes = [
     y: YOFFSET, 
     w: BOXWH, 
     h: BOXWH, 
-    speed: 3, 
+    speed: 3*GAMESPEED, 
     color: grayEI,
     current: 0, 
     pixel: 0,
@@ -235,7 +237,7 @@ var rocketTypes = [
     y: YOFFSET, 
     w: BOXWH, 
     h: BOXWH, 
-    speed: 1, 
+    speed: 1*GAMESPEED, 
     color: brownEI,
     current: 0, 
     pixel: 0,
@@ -248,7 +250,7 @@ var rocketTypes = [
     y: YOFFSET, 
     w: BOXWH, 
     h: BOXWH, 
-    speed: 1, 
+    speed: 1*GAMESPEED, 
     color: pinkEI,
     current: 0, 
     pixel: 0,
@@ -261,7 +263,7 @@ var rocketTypes = [
     y: YOFFSET, 
     w: BOXWH, 
     h: BOXWH, 
-    speed: 2, 
+    speed: 2*GAMESPEED, 
     color: limeEI,
     current: 0, 
     pixel: 0, 
@@ -274,7 +276,7 @@ var rocketTypes = [
     y: YOFFSET, 
     w: BOXWH, 
     h: BOXWH, 
-    speed: 2, 
+    speed: 2*GAMESPEED, 
     color: aquaEI,
     current: 0, 
     pixel: 0, 
@@ -287,7 +289,7 @@ var rocketTypes = [
     y: YOFFSET, 
     w: BOXWH, 
     h: BOXWH, 
-    speed: 2, 
+    speed: 2*GAMESPEED, 
     color: orangeEI,
     current: 0, 
     pixel: 0, 
@@ -300,7 +302,7 @@ var rocketTypes = [
     y: YOFFSET, 
     w: BOXWH, 
     h: BOXWH, 
-    speed: 2, 
+    speed: 2*GAMESPEED, 
     color: purpleEI,
     current: 0, 
     pixel: 0, 
@@ -308,6 +310,63 @@ var rocketTypes = [
   }
 ]
 
+var waves = [
+  {//redEI, blueEI, greenEI, grayEI, brownEI, pinkEI, limeEI, aquaEI, orangeEI, purpleEI
+    arr: 
+    [10,       0,      0,       0,      0,      0,      0,      0,       0,       0],
+    waveNum: 0
+  },  
+  {//redEI, blueEI, greenEI, grayEI, brownEI, pinkEI, limeEI, aquaEI, orangeEI, purpleEI
+    arr: 
+    [10,       10,      0,       0,      0,      0,      0,      0,       0,       0],
+    waveNum: 1
+  },  
+  {//redEI, blueEI, greenEI, grayEI, brownEI, pinkEI, limeEI, aquaEI, orangeEI, purpleEI
+    arr: 
+    [10,       10,      10,       0,      0,      0,      0,      0,       0,       0],
+    waveNum: 2
+  },  
+  {//redEI, blueEI, greenEI, grayEI, brownEI, pinkEI, limeEI, aquaEI, orangeEI, purpleEI
+    arr: 
+    [10,       10,      10,       10,      0,      0,      0,      0,       0,       0],
+    waveNum: 3
+  },  
+  {//redEI, blueEI, greenEI, grayEI, brownEI, pinkEI, limeEI, aquaEI, orangeEI, purpleEI
+    arr: 
+    [10,       10,      10,       10,      10,      0,      0,      0,       0,       0],
+    waveNum: 4
+  },  
+  {//redEI, blueEI, greenEI, grayEI, brownEI, pinkEI, limeEI, aquaEI, orangeEI, purpleEI
+    arr: 
+    [10,       10,      10,       10,      10,      1,      0,      0,       0,       0],
+    waveNum: 5
+  },  
+  {//redEI, blueEI, greenEI, grayEI, brownEI, pinkEI, limeEI, aquaEI, orangeEI, purpleEI
+    arr: 
+    [10,       0,      0,       0,      0,      10,      0,      0,       0,       0],
+    waveNum: 6
+  },  
+  {//redEI, blueEI, greenEI, grayEI, brownEI, pinkEI, limeEI, aquaEI, orangeEI, purpleEI
+    arr: 
+    [10,       10,      10,       0,      0,      10,      0,      0,       0,       0],
+    waveNum: 7
+  },  
+  {//redEI, blueEI, greenEI, grayEI, brownEI, pinkEI, limeEI, aquaEI, orangeEI, purpleEI
+    arr: 
+    [10,       10,      10,       0,      0,      10,      10,      10,       0,       0],
+    waveNum: 8
+  },  
+  {//redEI, blueEI, greenEI, grayEI, brownEI, pinkEI, limeEI, aquaEI, orangeEI, purpleEI
+    arr: 
+    [10,       10,      10,       10,      10,      10,      10,      10,       10,       10],
+    waveNum: 9
+  },  
+  {//redEI, blueEI, greenEI, grayEI, brownEI, pinkEI, limeEI, aquaEI, orangeEI, purpleEI
+    arr: 
+    [15,       15,      15,       15,      15,      15,      15,      15,       15,       15],
+    waveNum: 10
+  }
+]
 
 var colorArr = [redEI, blueEI, greenEI, grayEI, brownEI, pinkEI, limeEI, aquaEI, orangeEI, purpleEI];
 var pathCoords = [];
@@ -538,7 +597,8 @@ function drawEnemies() {
     if (enemies[i] == null) {
       continue;
     }
-    if (enemies[i].x+1 > XOFFSET) {
+    if (enemies[i].x+enemies[i].w/2-10 >= XOFFSET) {
+      enemies[i].active = true;
       drawRotatedEnemies((enemies[i].dir-1)*90, enemies[i]);
       //c.drawImage(enemies[i].color, enemies[i].x, enemies[i].y, enemies[i].w, enemies[i].h);
     }
@@ -553,6 +613,10 @@ function moveEnemies() {
         return;
       }
   for (let i = 0; i < enemies.length; i++) {
+    if (enemies[i].x < XOFFSET) {
+      enemies[i].x+=enemies[i].speed;
+      continue;
+    }
     if (enemies[i].health <= 0) {
       if (enemies[i].color == pinkEI) {
         generateEnemies(10, enemies[i]);
@@ -589,8 +653,8 @@ function moveEnemies() {
     }
 
 
-
     enemies[i].pixel+=enemies[i].speed;
+
 
 
     if (enemies[i].pixel >= BOXWH) {
@@ -628,7 +692,7 @@ function drawHeroButtons() {
 function generateEnemies(numOfEnemies, enemy = {x: -1, y: 0}) {
   for (let i = 0; i < numOfEnemies; i++) {
     var rand = getRandomIntInclusive(0, rocketTypes.length-1);
-    var SoffSet = 1*((numOfEnemies-i)/100);
+    var SoffSet = 1*((numOfEnemies-i)/numOfEnemies);
     enemies.push({
       desc: rocketTypes[rand].desc,
       dir: rocketTypes[rand].dir, 
@@ -641,6 +705,7 @@ function generateEnemies(numOfEnemies, enemy = {x: -1, y: 0}) {
       current: rocketTypes[rand].current, 
       pixel: rocketTypes[rand].pixel,
       health: rocketTypes[rand].health, 
+      active: false
     });
     if (enemy.x != -1) {
       while (enemies[enemies.length-1].color == pinkEI) {
@@ -656,7 +721,8 @@ function generateEnemies(numOfEnemies, enemy = {x: -1, y: 0}) {
           color: rocketTypes[rand].color,
           current: enemy.current, 
           pixel: rocketTypes[rand].pixel,
-          health: rocketTypes[rand].health, 
+          health: rocketTypes[rand].health,
+          active: false
         });
       }
       enemies[enemies.length-1].x = enemy.x;
@@ -670,15 +736,56 @@ function generateEnemies(numOfEnemies, enemy = {x: -1, y: 0}) {
   } // dir: 0 --> UP,   1 --> RIGHT,   2 --> DOWN,   3 --> LEFT
 }
 
+function countRockets(wave) {
+  var total = 0;
+  for (let i = 0; i < wave.arr.length; i++) {
+    total+=wave.arr[i];
+  }
+  return total;
+}
+
+function generateWave(wave) {
+  var rocketCount = countRockets(wave);
+  var SoffSet = 0;
+  for (let i = 0; i < wave.arr.length; i++) {
+    for (let x = 0; x < wave.arr[i]; x++) {
+      SoffSet-=3;
+      enemies.push({
+        desc: rocketTypes[i].desc,
+        dir: rocketTypes[i].dir, 
+        x: XOFFSET-SoffSet-(waveCount+1)*100, 
+        y: YOFFSET, 
+        w: BOXWH, 
+        h: BOXWH, 
+        speed: rocketTypes[i].speed, 
+        color: rocketTypes[i].color,
+        current: rocketTypes[i].current, 
+        pixel: rocketTypes[i].pixel,
+        health: rocketTypes[i].health,
+        active: false 
+      });
+    }
+  }
+}
+
 function shootGunner() {
   if (enemies.length == 0) {
     return;
   }
-  for (let i = 0; i < towers.length; i++) {
-    if (towers[i].type == GUNNER) {
-      addBullet({x: 0, y: 0, w: BOXWH/2, h: BOXWH/2}, towers[i]);
+  var active = false;
+  for (let i = 0; i < enemies.length; i++) {
+    if (enemies[i].active) {
+      active = true;
     }
   }
+  if (active) {
+    for (let i = 0; i < towers.length; i++) {
+      if (towers[i].type == GUNNER) {
+        addBullet({x: 0, y: 0, w: BOXWH/2, h: BOXWH/2}, towers[i]);
+      }
+    }
+  }
+
 }
 
 function adjustTowers() { // updates target and tower dy dx
@@ -708,9 +815,17 @@ function shootCannon() {
   if (enemies.length == 0) {
     return;
   }
-  for (let i = 0; i < towers.length; i++) {
-    if (towers[i].type == CANNON) {
-      addBullet({x: 0, y: 0, w: BOXWH/2, h: BOXWH/2}, towers[i]);
+  var active = false;
+  for (let i = 0; i < enemies.length; i++) {
+    if (enemies[i].active) {
+      active = true;
+    }
+  }
+  if (active) {
+    for (let i = 0; i < towers.length; i++) {
+      if (towers[i].type == CANNON) {
+        addBullet({x: 0, y: 0, w: BOXWH/2, h: BOXWH/2}, towers[i]);
+      }
     }
   }
 }
@@ -745,12 +860,13 @@ createDirections();
 drawBackground();
 drawButtons();
 drawHeroButtons();
-drawBullets()
+drawBullets();
 drawTowers();
 drawEnemies();
 moveEnemies();
-generateEnemies(10, {x: -1, y: 0});
-
+generateWave(waves[waveCount]);
+console.log(enemies[0].x);
+waveCount++;
 setInterval(shootGunner, GUNNERFIRERATE);
 setInterval(shootCannon, CANNONFIRERATE);
 setInterval(animsUI, 50);
@@ -923,7 +1039,8 @@ function addBullet(position, tower) {
       dy: 0, 
       w: BOXWH/6, 
       h: BOXWH/6,
-      twr: tower
+      twr: tower,
+      active: true
     });
   }
   if (tower.type == CANNON) {
@@ -934,7 +1051,8 @@ function addBullet(position, tower) {
       dy: 0, 
       w: BOXWH/3, 
       h: BOXWH/3,
-      twr: tower
+      twr: tower,
+      active: true
     });
   }
 
@@ -944,6 +1062,13 @@ function addBullet(position, tower) {
 
 function updateBullet(bullet, position) {
   //const AVERAGESPEED = 3; // AVG == 2 --> 1.95 is what it comes out to, keep in mind
+  if (bullet.x < XOFFSET || bullet.x > XOFFSET + GAMEWIDTH) {
+    bullet.active = false;
+  }
+  if (bullet.y < YOFFSET || bullet.y > YOFFSET + GAMEHEIGHT) {
+    bullet.active = false;
+  }
+
   var AVERAGESPEED = 1;
   if (bullet.twr.type == GUNNER) {
     AVERAGESPEED = GUNNERSPEED;
@@ -979,14 +1104,17 @@ function updateBullet(bullet, position) {
     changeX /= 1.05;
     changeY /= 1.05;
   }
+  if (bullet.active) {
+    bullet.dx = changeX;
+    bullet.dy = changeY;
+  }
 
-  bullet.dx = changeX;
-  bullet.dy = changeY;
 }
 
 
 
 canvas.addEventListener('click', function(event) {
+  console.log(waveCount);
   var mousePos = getMousePos(canvas, event);
   //addBullet(mousePos, towers[towers.length-1]);
   var selectedButton = isInside(mousePos, buttons);
@@ -996,8 +1124,14 @@ canvas.addEventListener('click', function(event) {
   if (selectedButton == nextWaveButton) {
     if (enemies.length == 0) {
       bullets = [];
-      generateEnemies(50*waveCount);
-      waveCount++;
+      waveCount+=10;
+      if (waveCount < waves.length) {
+        generateWave(waves[waveCount]);
+      }
+      else {
+        generateWave({arr: [10*(waveCount/5), 10*(waveCount/5), 10*(waveCount/5), 10*(waveCount/5), 10*(waveCount/5), 10*(waveCount/5), 10*(waveCount/5), 10*(waveCount/5), 10*(waveCount/5), 10*(waveCount/5)], waveNum: waveCount});
+      }
+
     }
   }
 }, false);
@@ -1011,7 +1145,10 @@ function Timer() { // game timer
         continue;
       }
         if (enemies[bullets[x].twr.target] != null) {
-          updateBullet(bullets[x], enemies[bullets[x].twr.target]);
+          if (enemies[bullets[x].twr.target].active) {
+            updateBullet(bullets[x], enemies[bullets[x].twr.target]);
+          }
+
         }
         if (bullets[x].twr.type == GUNNER) {
           var hitEnemy = isInside({x: bullets[x].x, y: bullets[x].y}, enemies);
