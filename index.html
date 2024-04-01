@@ -2,8 +2,8 @@
 <link href="https://fonts.cdnfonts.com/css/arcade-classic" rel="stylesheet">
 <title>Tower Defense</title>
 <body>
-<body style="background-color:#ffaa95;">
-  <canvas id="myCanvas" width='1200' height='900' style="background-color:#ffaa95"></canvas>
+<body style="background-color:#000000;">
+  <canvas id="myCanvas" width='1300' height='900' style="background-color:#000000"></canvas>
 </body>
 <style>
 
@@ -11,7 +11,7 @@ canvas {
     padding: 0;
     margin: auto;
     display: block;
-    width: 1200px;
+    width: 1300px;
     height: 900px;
     position: absolute;
     top: 0;
@@ -74,6 +74,9 @@ cannonImage.src = "images/cannon/cannon.png";
 var cannonball = new Image();
 cannonball.src = "images/cannon/cannonball.png";
 
+var backG = new Image();
+backG.src = "images/backgtd2.png";
+
 var enemies = [
 ];
 const level1 = [
@@ -95,23 +98,30 @@ var GUNNER = "gunner";
 var CANNON = "cannon";
 
 var bullets = []
+const TOWEROFFSETX = 72;
+const TOWEROFFSETY = 110;
+
 var heroButtons = [{
   type: GUNNER,
-  x: 50, 
-  y: 150, 
+  x: 41, 
+  y: 209, 
   w: BOXWH,
   h: BOXWH,
   imgs: [emptyblank, gunnerImage],
-  bullet: gunnerball
+  real: emptyGunner,
+  bullet: gunnerball,
+  price: 100
 },
   {
   type: CANNON,
-  x: 50, 
-  y: 250, 
+  x: 41+TOWEROFFSETX, 
+  y: 209, 
   w: BOXWH,
   h: BOXWH,
   imgs: [emptyblank, cannonImage],
-  bullet: cannonball
+  real: emptyCannon,
+  bullet: cannonball,
+  price: 200
 
 }]
 
@@ -144,13 +154,21 @@ wave1.src = "images/nextWave/pixil-frame-2.png";
 var wave2 = new Image();
 wave2.src = "images/nextWave/pixil-frame-3.png";
 
+var start0 = new Image();
+start0.src = "images/startButton/pixil-frame-0.png";
+var start1 = new Image();
+start1.src = "images/startButton/pixil-frame-1.png";
+
+var flesh = new Image();
+flesh.src = "images/flesh23.png";
 
 var nextWaveButton = {
-  x: 150,
+  x: canvas.width/2-150/2,
   y: 50,
   w: 150,
-  h: 150,
-  imgs: [wave0, wave1, wave2],
+  h: 50,
+  imgs: [start0, start1],
+  hover: false,
   index: 0
 };
 var buttons = [nextWaveButton];
@@ -379,6 +397,7 @@ var tmp = null;
 var coords = [];
 var directions = [];
 var currentRow = 0;
+var balance = 600;
 
 function pathFind(selectedLevelMap, startSq) {
   while (!pathFound) {
@@ -514,8 +533,6 @@ function drawRotatedCannon(degrees, tower) {
   c.restore();
 }
 
-
-
 function createDirections() {
   for (let i = 0; i < selectedLevelMap.length; i++) {
     if (i != 0 && i % NUMCOLS == 0) {
@@ -588,6 +605,8 @@ function drawBackground() {
     }
     c.fillRect(XOFFSET + (i % NUMCOLS)*BOXWH, YOFFSET + (currentRow)*BOXWH, GAMEWIDTH / NUMCOLS, GAMEHEIGHT / NUMROWS);
   }
+  c.drawImage(flesh, 0, 0, canvas.width, canvas.height);
+  c.drawImage(backG, XOFFSET, YOFFSET, GAMEWIDTH, GAMEHEIGHT);
   window.requestAnimationFrame(drawBackground);
 }
 
@@ -618,6 +637,7 @@ function moveEnemies() {
       continue;
     }
     if (enemies[i].health <= 0) {
+      balance+=2;
       if (enemies[i].color == pinkEI) {
         generateEnemies(10, enemies[i]);
         //clean();
@@ -675,10 +695,34 @@ function moveEnemies() {
   window.requestAnimationFrame(moveEnemies);
 }
 
+function drawStroked(text, x, y) {
+    c.strokeStyle = 'black';
+    c.lineWidth = 3;
+    c.strokeText(text, x, y);
+    c.fillStyle = 'white';
+    c.fillText(text, x, y);
+}
+
 function drawHeroButtons() {
+  const textOffsetX = 30;
+  const textOffsetY = 75;
+  c.textAlign = "center";
+  c.font = "15px ArcadeClassic";
   for (let i = 0; i < heroButtons.length; i++) {
     for (let x = 0; x < heroButtons[i].imgs.length; x++) {
-      c.drawImage(heroButtons[i].imgs[x], heroButtons[i].x, heroButtons[i].y, heroButtons[i].w, heroButtons[i].h);
+      if (x == 0) {
+        if (balance >= heroButtons[i].price) {
+          c.drawImage(heroButtons[i].real, heroButtons[i].x, heroButtons[i].y, heroButtons[i].w, heroButtons[i].h);
+        }
+        else {
+          c.drawImage(heroButtons[i].imgs[x], heroButtons[i].x, heroButtons[i].y, heroButtons[i].w, heroButtons[i].h);
+        }
+      }
+      else {
+        c.drawImage(heroButtons[i].imgs[x], heroButtons[i].x, heroButtons[i].y, heroButtons[i].w, heroButtons[i].h);
+      }
+      c.fillStyle = "white";
+      drawStroked("$  " + heroButtons[i].price, heroButtons[i].x+textOffsetX, heroButtons[i].y+textOffsetY)
     }
   }
   if (tmp != null) {
@@ -686,10 +730,12 @@ function drawHeroButtons() {
       c.drawImage(tmp.imgs[x], tmp.x, tmp.y, tmp.w, tmp.h);
     }
   }
+  c.font = "25px ArcadeClassic";
+  drawStroked("Balance:   $ " + balance, GAMEWIDTH+XOFFSET, YOFFSET-50);
   window.requestAnimationFrame(drawHeroButtons);
 }
 
-function generateEnemies(numOfEnemies, enemy = {x: -1, y: 0}) {
+function generateEnemies(numOfEnemies, enemy = {x: -1, y: 0}) { // generation for pink
   for (let i = 0; i < numOfEnemies; i++) {
     var rand = getRandomIntInclusive(0, rocketTypes.length-1);
     var SoffSet = 1*((numOfEnemies-i)/numOfEnemies);
@@ -744,16 +790,16 @@ function countRockets(wave) {
   return total;
 }
 
-function generateWave(wave) {
+function generateWave(wave) { // main generation func
   var rocketCount = countRockets(wave);
   var SoffSet = 0;
   for (let i = 0; i < wave.arr.length; i++) {
     for (let x = 0; x < wave.arr[i]; x++) {
-      SoffSet-=3;
+      SoffSet+=1;
       enemies.push({
         desc: rocketTypes[i].desc,
         dir: rocketTypes[i].dir, 
-        x: XOFFSET-SoffSet-(waveCount+1)*100, 
+        x: XOFFSET-90-SoffSet*4,
         y: YOFFSET, 
         w: BOXWH, 
         h: BOXWH, 
@@ -833,11 +879,13 @@ function shootCannon() {
 function drawButtons() {
   for (let i = 0; i < buttons.length; i++) {
     if (buttons[i] == nextWaveButton) {
-      if (enemies.length != 0) {
-        c.drawImage(nextWaveBlank, buttons[i].x, buttons[i].y, buttons[i].w, buttons[i].h)
-      }
-      else {
-        c.drawImage(buttons[i].imgs[buttons[i].index], buttons[i].x, buttons[i].y, buttons[i].w, buttons[i].h);
+      if (enemies.length == 0) {
+        if (buttons[i].hover) {
+          c.drawImage(buttons[i].imgs[1], buttons[i].x, buttons[i].y, buttons[i].w, buttons[i].h*3);
+        }
+        else {
+          c.drawImage(buttons[i].imgs[0], buttons[i].x, buttons[i].y, buttons[i].w, buttons[i].h*3);
+        }
       }
     }
 
@@ -865,7 +913,6 @@ drawTowers();
 drawEnemies();
 moveEnemies();
 generateWave(waves[waveCount]);
-console.log(enemies[0].x);
 waveCount++;
 setInterval(shootGunner, GUNNERFIRERATE);
 setInterval(shootCannon, CANNONFIRERATE);
@@ -957,10 +1004,21 @@ function snap() {
 canvas.addEventListener("mousemove", function (event) {
   var mousePos = getMousePos(canvas, event);
   //updateBullet(bullets[bullets.length-1], mousePos);
+  hoverButton = isInside(mousePos, buttons)
+
   if (tmp != null) {
     tmp.x = mousePos.x-tmp.w/2;
     tmp.y = mousePos.y-tmp.h/2;
   }
+  for (let i = 0; i < buttons.length; i++) {
+    buttons[i].hover = false;
+  }
+  if (hoverButton == null) {
+    return;    
+  }
+  hoverButton.hover = true;
+
+
 }, false);
 
 canvas.addEventListener("mouseup", function (event) {
@@ -968,6 +1026,7 @@ canvas.addEventListener("mouseup", function (event) {
   if (tmp != null) {
     snap();
     if (tmp != null) {
+      balance -= tmp.price;
       if (tmp.type == GUNNER) {
         towers.push({
           type: tmp.type,
@@ -1009,17 +1068,21 @@ canvas.addEventListener("mousedown", function (event) {
     tmp = null;
     return;
   }
-  tmp = {
-    type: selectedHero.type,
-    x: selectedHero.x,
-    y: selectedHero.y,
-    w: selectedHero.w, 
-    h: selectedHero.h,
-    imgs: selectedHero.imgs,
-    bullet: selectedHero.bullet
+  if (balance >= selectedHero.price) {
+    tmp = {
+      type: selectedHero.type,
+      x: selectedHero.x,
+      y: selectedHero.y,
+      w: selectedHero.w, 
+      h: selectedHero.h,
+      imgs: selectedHero.imgs,
+      bullet: selectedHero.bullet,
+      price: selectedHero.price
+    }
+    tmp.x = mousePos.x-tmp.w/2;
+    tmp.y = mousePos.y-tmp.h/2;
   }
-  tmp.x = mousePos.x-tmp.w/2;
-  tmp.y = mousePos.y-tmp.h/2;
+
 
 
 }, false);
@@ -1114,7 +1177,6 @@ function updateBullet(bullet, position) {
 
 
 canvas.addEventListener('click', function(event) {
-  console.log(waveCount);
   var mousePos = getMousePos(canvas, event);
   //addBullet(mousePos, towers[towers.length-1]);
   var selectedButton = isInside(mousePos, buttons);
@@ -1124,7 +1186,7 @@ canvas.addEventListener('click', function(event) {
   if (selectedButton == nextWaveButton) {
     if (enemies.length == 0) {
       bullets = [];
-      waveCount+=10;
+      waveCount+=1;
       if (waveCount < waves.length) {
         generateWave(waves[waveCount]);
       }
