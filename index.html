@@ -38,9 +38,10 @@ c.font = "30px ArcadeClassic";
 c.imageSmoothingEnabled = false;
 const NUMCOLS = 15;
 const NUMROWS = 10;
-const GAMEWIDTH = 900;
-const GAMEHEIGHT = 600;
 const BOXWH = 60;
+const GAMEWIDTH = BOXWH*NUMCOLS;
+const GAMEHEIGHT = BOXWH*NUMROWS;
+
 const XOFFSET = (canvas.width-GAMEWIDTH)/2;
 const YOFFSET = (canvas.height-GAMEHEIGHT)/2;
 
@@ -52,16 +53,23 @@ const CANNONFIRERATE = 500;
 const GUNNERFIRERATE = 100;
 
 
+var emptyblank = new Image();
+emptyblank.src = "images/greyblank.png";
+
 var emptyGunner = new Image();
 emptyGunner.src = "images/gunner/empty.png";
 var gunnerImage = new Image();
 gunnerImage.src = "images/gunner/tower.png";
-var emptyblank = new Image();
-emptyblank.src = "images/greyblank.png";
+var gunnerball = new Image();
+gunnerball.src = "images/gunner/gunnerball.png";
+
+
 var emptyCannon = new Image();
 emptyCannon.src = "images/cannon/empty.png";
 var cannonImage = new Image();
 cannonImage.src = "images/cannon/cannon.png";
+var cannonball = new Image();
+cannonball.src = "images/cannon/cannonball.png";
 
 var enemies = [
 ];
@@ -91,7 +99,7 @@ var heroButtons = [{
   w: BOXWH,
   h: BOXWH,
   imgs: [emptyblank, gunnerImage],
-  bullet: "green"
+  bullet: gunnerball
 },
   {
   type: CANNON,
@@ -100,7 +108,7 @@ var heroButtons = [{
   w: BOXWH,
   h: BOXWH,
   imgs: [emptyblank, cannonImage],
-  bullet: "#4d6df3"
+  bullet: cannonball
 
 }]
 
@@ -200,6 +208,7 @@ function pathFind(selectedLevelMap, startSq) {
 
   }
 }
+
 function drawTowers() {
     c.fillStyle = "red";
 
@@ -266,14 +275,24 @@ function drawBullets() {
   clean();
 
   for (let i = 0; i < bullets.length; i++) {
-    c.fillStyle = bullets[i].twr.bullet;
-    c.fillRect(bullets[i].x, bullets[i].y, bullets[i].w, bullets[i].h);
-    bullets[i].x += bullets[i].dx;
-    bullets[i].y += bullets[i].dy;
-    if (bullets[i].x < 0-bullets[i].w || bullets[i].x > canvas.width || bullets[i].y < 0-bullets[i].h || bullets[i].y > canvas.height) {
-      bullets[i] = null;
+    if (bullets[i].twr.type == GUNNER) {
+      c.fillStyle = "green";
+      c.beginPath();
+      c.arc(bullets[i].x + bullets[i].w/2, bullets[i].y + bullets[i].h/2, 5, 0, Math.PI * 2);
+      c.closePath();
+      c.fill();
+      //c.drawImage(bullets[i].twr.bullet, bullets[i].x, bullets[i].y, bullets[i].w*2, bullets[i].h*2);
     }
+    else if (bullets[i].twr.type == CANNON) {
+      c.drawImage(bullets[i].twr.bullet, bullets[i].x, bullets[i].y, bullets[i].w*2, bullets[i].h*2);
+    }
+      bullets[i].x += bullets[i].dx;
+      bullets[i].y += bullets[i].dy;
+      if (bullets[i].x < 0-bullets[i].w || bullets[i].x > canvas.width || bullets[i].y < 0-bullets[i].h || bullets[i].y > canvas.height) {
+        bullets[i] = null;
+      }
   }
+
 
   window.requestAnimationFrame(drawBullets);
 }
@@ -734,4 +753,3 @@ function clean() {
 
 
 </html>
-
