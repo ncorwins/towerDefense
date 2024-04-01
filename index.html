@@ -110,7 +110,7 @@ var heroButtons = [{
   imgs: [emptyblank, gunnerImage],
   real: emptyGunner,
   bullet: gunnerball,
-  price: 100
+  price: 200
 },
   {
   type: CANNON,
@@ -121,7 +121,7 @@ var heroButtons = [{
   imgs: [emptyblank, cannonImage],
   real: emptyCannon,
   bullet: cannonball,
-  price: 200
+  price: 300
 
 }]
 
@@ -732,6 +732,7 @@ function drawHeroButtons() {
   }
   c.font = "25px ArcadeClassic";
   drawStroked("Balance:   $ " + balance, GAMEWIDTH+XOFFSET, YOFFSET-50);
+  drawStroked("Wave   " + waveCount, GAMEWIDTH+XOFFSET, YOFFSET-20)
   window.requestAnimationFrame(drawHeroButtons);
 }
 
