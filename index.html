@@ -2,8 +2,8 @@
 <link href="https://fonts.cdnfonts.com/css/arcade-classic" rel="stylesheet">
 <title>Tower Defense</title>
 <body>
-<body style="background-color:white;">
-  <canvas id="myCanvas" width='1200' height='900' style="background-color:#d4f6ff"></canvas>
+<body style="background-color:#ffaa95;">
+  <canvas id="myCanvas" width='1200' height='900' style="background-color:#ffaa95"></canvas>
 </body>
 <style>
 
@@ -39,6 +39,7 @@ const NUMCOLS = 15;
 const NUMROWS = 10;
 const GAMEWIDTH = 900;
 const GAMEHEIGHT = 600;
+const BOXWH = 60;
 const XOFFSET = (canvas.width-GAMEWIDTH)/2;
 const YOFFSET = (canvas.height-GAMEHEIGHT)/2;
 
@@ -48,9 +49,9 @@ var tower = new Image();
 tower.src = "images/tower.png";
 
 var enemies = [
-  {x: XOFFSET, y: YOFFSET, w: 60, h: 60, speed: 1,color: "green", current: 0, pixel: 0},
-  {x: XOFFSET, y: YOFFSET, w: 60, h: 60, speed: 3,color: "blue", current: 0, pixel: 0},
-  {x: XOFFSET, y: YOFFSET, w: 60, h: 60, speed: 2,color: "red", current: 0, pixel: 0}
+  {x: XOFFSET, y: YOFFSET, w: BOXWH, h: BOXWH, speed: 1,color: "green", current: 0, pixel: 0},
+  {x: XOFFSET, y: YOFFSET, w: BOXWH, h: BOXWH, speed: 3,color: "blue", current: 0, pixel: 0},
+  {x: XOFFSET, y: YOFFSET, w: BOXWH, h: BOXWH, speed: 2,color: "red", current: 0, pixel: 0}
 ];
 console.log("THIS GUY STIIINKS");
 const level1 = [
@@ -75,8 +76,8 @@ var bullets = []
 var heroButtons = [{
   x: 50, 
   y: 150, 
-  w: 60,
-  h: 60,
+  w: BOXWH,
+  h: BOXWH,
   imgs: [empty, tower]
 }]
 
@@ -221,10 +222,10 @@ function createDirections() {
         currentRow++;
       }
       coords.push({
-        x: XOFFSET + (i % NUMCOLS)*60,
-        y: YOFFSET + (currentRow)*60,
-        w: 60,
-        h: 60,
+        x: XOFFSET + (i % NUMCOLS)*BOXWH,
+        y: YOFFSET + (currentRow)*BOXWH,
+        w: BOXWH,
+        h: BOXWH,
         value: selectedLevelMap[i],
         rx: i % NUMCOLS,
         ry: currentRow
@@ -286,7 +287,7 @@ function drawBackground() {
     else {
       c.fillStyle = "white";
     }
-    c.fillRect(XOFFSET + (i % NUMCOLS)*60, YOFFSET + (currentRow)*60, GAMEWIDTH / NUMCOLS, GAMEHEIGHT / NUMROWS);
+    c.fillRect(XOFFSET + (i % NUMCOLS)*BOXWH, YOFFSET + (currentRow)*BOXWH, GAMEWIDTH / NUMCOLS, GAMEHEIGHT / NUMROWS);
   }
   window.requestAnimationFrame(drawBackground);
 }
@@ -335,7 +336,7 @@ function moveEnemies() {
     enemies[i].pixel+=enemies[i].speed;
 
 
-    if (enemies[i].pixel >= 60) {
+    if (enemies[i].pixel >= BOXWH) {
       enemies[i].current++;
       if (enemies[i].current == directions.length-1) {
         enemies[i] = null;
@@ -380,7 +381,7 @@ function shoot() {
     return;
   }
   for (let i = 0; i < towers.length; i++) {
-    addBullet({x: 0, y: 0, w: 60/2, h: 60/2}, towers[i]);
+    addBullet({x: 0, y: 0, w: BOXWH/2, h: BOXWH/2}, towers[i]);
   }
 }
 
@@ -554,8 +555,8 @@ function addBullet(position, tower) {
   y: tower.y + tower.h/2, 
   dx: 0, 
   dy: 0, 
-  w: 10, 
-  h: 10,
+  w: BOXWH/6, 
+  h: BOXWH/6,
   twr: tower
 });
   updateBullet(bullets[bullets.length-1], position);
