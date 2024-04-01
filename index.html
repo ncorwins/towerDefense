@@ -2,7 +2,6 @@
 <link href="https://fonts.cdnfonts.com/css/arcade-classic" rel="stylesheet">
 <title>Tower Defense</title>
 <body>
-<button id="test" onclick="generateEnemies(100, {x: -1, y: 0})"></button>
 <body style="background-color:#ffaa95;">
   <canvas id="myCanvas" width='1200' height='900' style="background-color:#ffaa95"></canvas>
 </body>
@@ -52,6 +51,8 @@ const CANNONSPEED = 2;
 const CANNONFIRERATE = 500;
 const GUNNERFIRERATE = 100;
 const ENEMYSIZE = 70;
+
+var waveCount = 1;
 
 var emptyblank = new Image();
 emptyblank.src = "images/greyblank.png";
@@ -131,6 +132,27 @@ function calcInstances() {
   }
 }
 calcInstances();
+
+var nextWaveBlank = new Image();
+nextWaveBlank.src = "images/nextWave/pixil-frame-0.png";
+var wave0 = new Image();
+wave0.src = "images/nextWave/pixil-frame-1.png";
+var wave1 = new Image();
+wave1.src = "images/nextWave/pixil-frame-2.png";
+var wave2 = new Image();
+wave2.src = "images/nextWave/pixil-frame-3.png";
+
+
+var nextWaveButton = {
+  x: 150,
+  y: 50,
+  w: 150,
+  h: 150,
+  imgs: [wave0, wave1, wave2],
+  index: 0
+};
+var buttons = [nextWaveButton];
+
 
 var redEI = new Image();
 redEI.src = "images/enemies/pixil-frame-0.png";
@@ -231,6 +253,58 @@ var rocketTypes = [
     current: 0, 
     pixel: 0,
     health: 1, 
+  },
+  {
+    desc: "lime, OG",
+    dir: 1, 
+    x: XOFFSET, 
+    y: YOFFSET, 
+    w: BOXWH, 
+    h: BOXWH, 
+    speed: 2, 
+    color: limeEI,
+    current: 0, 
+    pixel: 0, 
+    health: 2, 
+  },
+  {
+    desc: "aqua, OG",
+    dir: 1, 
+    x: XOFFSET, 
+    y: YOFFSET, 
+    w: BOXWH, 
+    h: BOXWH, 
+    speed: 2, 
+    color: aquaEI,
+    current: 0, 
+    pixel: 0, 
+    health: 2, 
+  },
+  {
+    desc: "orange, OG",
+    dir: 1, 
+    x: XOFFSET, 
+    y: YOFFSET, 
+    w: BOXWH, 
+    h: BOXWH, 
+    speed: 2, 
+    color: orangeEI,
+    current: 0, 
+    pixel: 0, 
+    health: 2, 
+  },
+  {
+    desc: "purple, OG",
+    dir: 1, 
+    x: XOFFSET, 
+    y: YOFFSET, 
+    w: BOXWH, 
+    h: BOXWH, 
+    speed: 2, 
+    color: purpleEI,
+    current: 0, 
+    pixel: 0, 
+    health: 2, 
   }
 ]
 
@@ -641,18 +715,45 @@ function shootCannon() {
   }
 }
 
+function drawButtons() {
+  for (let i = 0; i < buttons.length; i++) {
+    if (buttons[i] == nextWaveButton) {
+      if (enemies.length != 0) {
+        c.drawImage(nextWaveBlank, buttons[i].x, buttons[i].y, buttons[i].w, buttons[i].h)
+      }
+      else {
+        c.drawImage(buttons[i].imgs[buttons[i].index], buttons[i].x, buttons[i].y, buttons[i].w, buttons[i].h);
+      }
+    }
+
+  }
+
+  window.requestAnimationFrame(drawButtons);
+}
+
+function animsUI() {
+  for (let i = 0; i < buttons.length; i++) {
+    if (buttons[i] == nextWaveButton) {
+      buttons[i].index += 1;
+      buttons[i].index %= buttons[i].imgs.length;
+    }
+  }
+}
+
 pathFind(level1, level1SS);
 createDirections();
 drawBackground();
+drawButtons();
 drawHeroButtons();
 drawBullets()
 drawTowers();
 drawEnemies();
 moveEnemies();
-generateEnemies(100, {x: -1, y: 0});
+generateEnemies(10, {x: -1, y: 0});
 
 setInterval(shootGunner, GUNNERFIRERATE);
 setInterval(shootCannon, CANNONFIRERATE);
+setInterval(animsUI, 50);
 setInterval(Timer, 15);
 setInterval(adjustTowers, 10);
 
@@ -888,6 +989,17 @@ function updateBullet(bullet, position) {
 canvas.addEventListener('click', function(event) {
   var mousePos = getMousePos(canvas, event);
   //addBullet(mousePos, towers[towers.length-1]);
+  var selectedButton = isInside(mousePos, buttons);
+  if (selectedButton == null) {
+    return;
+  }
+  if (selectedButton == nextWaveButton) {
+    if (enemies.length == 0) {
+      bullets = [];
+      generateEnemies(50*waveCount);
+      waveCount++;
+    }
+  }
 }, false);
 
 //HELPER FUNCTIONS
