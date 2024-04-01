@@ -2,7 +2,7 @@
 <link href="https://fonts.cdnfonts.com/css/arcade-classic" rel="stylesheet">
 <title>Tower Defense</title>
 <body>
-<button id="test" onclick="generateEnemies(100)"></button>
+<button id="test" onclick="generateEnemies(100, {x: -1, y: 0})"></button>
 <body style="background-color:#ffaa95;">
   <canvas id="myCanvas" width='1200' height='900' style="background-color:#ffaa95"></canvas>
 </body>
@@ -47,11 +47,11 @@ const YOFFSET = (canvas.height-GAMEHEIGHT)/2;
 
 // GAMEPLAY MECHANICS
 const CANNONRANGE = 20;
-const GUNNERSPEED = 3;
+const GUNNERSPEED = 4;
 const CANNONSPEED = 2;
 const CANNONFIRERATE = 500;
 const GUNNERFIRERATE = 100;
-
+const ENEMYSIZE = 70;
 
 var emptyblank = new Image();
 emptyblank.src = "images/greyblank.png";
@@ -132,7 +132,110 @@ function calcInstances() {
 }
 calcInstances();
 
+var redEI = new Image();
+redEI.src = "images/enemies/pixil-frame-0.png";
+var blueEI = new Image();
+blueEI.src = "images/enemies/pixil-frame-1.png";
+var greenEI = new Image();
+greenEI.src = "images/enemies/pixil-frame-2.png";
+var grayEI = new Image();
+grayEI.src = "images/enemies/pixil-frame-3.png";
+var brownEI = new Image();
+brownEI.src = "images/enemies/pixil-frame-4.png";
+var pinkEI = new Image();
+pinkEI.src = "images/enemies/pixil-frame-5.png";
+var limeEI = new Image();
+limeEI.src = "images/enemies/pixil-frame-6.png";
+var aquaEI = new Image();
+aquaEI.src = "images/enemies/pixil-frame-7.png";
+var orangeEI = new Image();
+orangeEI.src = "images/enemies/pixil-frame-8.png";
+var purpleEI = new Image();
+purpleEI.src = "images/enemies/pixil-frame-9.png";
 
+var rocketTypes = [
+  {
+    desc: "red, OG",
+    dir: 1, 
+    x: XOFFSET, 
+    y: YOFFSET, 
+    w: BOXWH, 
+    h: BOXWH, 
+    speed: 2, 
+    color: redEI,
+    current: 0, 
+    pixel: 0, 
+    health: 2, 
+  },
+  {
+    desc: "blue, FAST",
+    dir: 1, 
+    x: XOFFSET, 
+    y: YOFFSET, 
+    w: BOXWH, 
+    h: BOXWH, 
+    speed: 4, 
+    color: blueEI,
+    current: 0, 
+    pixel: 0,
+    health: 1, 
+  },
+  {
+    desc: "green, SLOW CHUNKY BOY",
+    dir: 1, 
+    x: XOFFSET, 
+    y: YOFFSET, 
+    w: BOXWH, 
+    h: BOXWH, 
+    speed: 1, 
+    color: greenEI,
+    current: 0, 
+    pixel: 0,
+    health: 5, 
+  },
+  {
+    desc: "gray, FAST AND CHUNKY",
+    dir: 1, 
+    x: XOFFSET, 
+    y: YOFFSET, 
+    w: BOXWH, 
+    h: BOXWH, 
+    speed: 3, 
+    color: grayEI,
+    current: 0, 
+    pixel: 0,
+    health: 4, 
+  },  
+  {
+    desc: "brown, slow and bad",
+    dir: 1, 
+    x: XOFFSET, 
+    y: YOFFSET, 
+    w: BOXWH, 
+    h: BOXWH, 
+    speed: 1, 
+    color: brownEI,
+    current: 0, 
+    pixel: 0,
+    health: 1, 
+  },
+  {
+    desc: "pink, dies spawns more",
+    dir: 1, 
+    x: XOFFSET, 
+    y: YOFFSET, 
+    w: BOXWH, 
+    h: BOXWH, 
+    speed: 1, 
+    color: pinkEI,
+    current: 0, 
+    pixel: 0,
+    health: 1, 
+  }
+]
+
+
+var colorArr = [redEI, blueEI, greenEI, grayEI, brownEI, pinkEI, limeEI, aquaEI, orangeEI, purpleEI];
 var pathCoords = [];
 var pathFound = false;
 var startCoord = null;
@@ -239,9 +342,46 @@ function drawRotated(degrees, tower){ // draw  a tower with rotation
     // since the context is rotated, the image will be rotated also
     c.drawImage(tower.img, -tower.w/2,-tower.h/2, tower.w, tower.h);
 
-    // we’re done with the rotating so restore the unrotated context
+    // were done with the rotating so restore the unrotated context
     c.restore();
 }
+
+function drawRotatedEnemies(degrees, tower) {
+  c.save();
+
+  // move to the center of the canvas
+  c.translate(tower.x+tower.w/2, tower.y+tower.h/2);
+
+  // rotate the canvas to the specified degrees
+  c.rotate(degrees*Math.PI/180);
+
+  // draw the image
+  // since the context is rotated, the image will be rotated also
+  c.drawImage(tower.color, -ENEMYSIZE/2,-ENEMYSIZE/2, ENEMYSIZE, ENEMYSIZE);
+
+  // we’re done with the rotating so restore the unrotated context
+  c.restore();
+}
+
+function drawRotatedCannon(degrees, tower) {
+  //c.drawImage(bullets[i].twr.bullet, bullets[i].x, bullets[i].y, bullets[i].w*2, bullets[i].h*2);
+  c.save();
+
+// move to the center of the canvas
+  c.translate(tower.x+tower.w/2, tower.y+tower.h/2);
+
+  // rotate the canvas to the specified degrees
+  c.rotate(degrees*Math.PI/180);
+
+  // draw the image
+  // since the context is rotated, the image will be rotated also
+  c.drawImage(tower.twr.bullet, -tower.w/2,-tower.h/2, tower.w*2, tower.h*2);
+
+  // we’re done with the rotating so restore the unrotated context
+  c.restore();
+}
+
+
 
 function createDirections() {
   for (let i = 0; i < selectedLevelMap.length; i++) {
@@ -284,7 +424,8 @@ function drawBullets() {
       //c.drawImage(bullets[i].twr.bullet, bullets[i].x, bullets[i].y, bullets[i].w*2, bullets[i].h*2);
     }
     else if (bullets[i].twr.type == CANNON) {
-      c.drawImage(bullets[i].twr.bullet, bullets[i].x, bullets[i].y, bullets[i].w*2, bullets[i].h*2);
+      //drawRotatedCannon(seconds*60 % 365, bullets[i]);
+      c.drawImage(bullets[i].twr.bullet, bullets[i].x,bullets[i].y, bullets[i].w*2, bullets[i].h*2);
     }
       bullets[i].x += bullets[i].dx;
       bullets[i].y += bullets[i].dy;
@@ -324,8 +465,8 @@ function drawEnemies() {
       continue;
     }
     if (enemies[i].x+1 > XOFFSET) {
-      c.fillStyle = enemies[i].color;
-      c.fillRect(enemies[i].x, enemies[i].y, enemies[i].w, enemies[i].h);
+      drawRotatedEnemies((enemies[i].dir-1)*90, enemies[i]);
+      //c.drawImage(enemies[i].color, enemies[i].x, enemies[i].y, enemies[i].w, enemies[i].h);
     }
 
   }
@@ -339,6 +480,10 @@ function moveEnemies() {
       }
   for (let i = 0; i < enemies.length; i++) {
     if (enemies[i].health <= 0) {
+      if (enemies[i].color == pinkEI) {
+        generateEnemies(10, enemies[i]);
+        //clean();
+      }
       enemies[i] = null;
     }
     if (enemies[i] == null) {
@@ -348,22 +493,27 @@ function moveEnemies() {
       enemies[i] = null;
       continue;
     }
-        if (directions[enemies[i].current].x < directions[enemies[i].current+1].x) {
+    if (enemies[i].current < directions.length-1) {
+      if (directions[enemies[i].current].x < directions[enemies[i].current+1].x) {
           enemies[i].x+=enemies[i].speed;
+          enemies[i].dir = 1;
 
         }
         else if (directions[enemies[i].current].x > directions[enemies[i].current+1].x) {
           enemies[i].x-=enemies[i].speed;
-
+          enemies[i].dir = 3;
         }
         else if (directions[enemies[i].current].y < directions[enemies[i].current+1].y) {
           enemies[i].y+=enemies[i].speed;
+          enemies[i].dir = 2;
 
         }
         else if (directions[enemies[i].current].y > directions[enemies[i].current+1].y) {
           enemies[i].y-=enemies[i].speed;
-
+          enemies[i].dir = 0;
         }
+    }
+
 
 
     enemies[i].pixel+=enemies[i].speed;
@@ -401,14 +551,49 @@ function drawHeroButtons() {
   window.requestAnimationFrame(drawHeroButtons);
 }
 
-function generateEnemies(numOfEnemies) {
+function generateEnemies(numOfEnemies, enemy = {x: -1, y: 0}) {
   for (let i = 0; i < numOfEnemies; i++) {
-    var rand = getRandomIntInclusive(1,4);
-    var rand2 = getRandomIntInclusive(25,500);
-    var colorArr = ["green", "blue", "red", "purple", "yellow"];
-    enemies.push({x: XOFFSET, y: YOFFSET, w: BOXWH, h: BOXWH, speed: rand2*.01, color: colorArr[getRandomIntInclusive(0,colorArr.length-1)], current: 0, pixel: 0, health: rand});
-  }
+    var rand = getRandomIntInclusive(0, rocketTypes.length-1);
+    var SoffSet = 1*((numOfEnemies-i)/100);
+    enemies.push({
+      desc: rocketTypes[rand].desc,
+      dir: rocketTypes[rand].dir, 
+      x: XOFFSET, 
+      y: YOFFSET, 
+      w: BOXWH, 
+      h: BOXWH, 
+      speed: rocketTypes[rand].speed+SoffSet, 
+      color: rocketTypes[rand].color,
+      current: rocketTypes[rand].current, 
+      pixel: rocketTypes[rand].pixel,
+      health: rocketTypes[rand].health, 
+    });
+    if (enemy.x != -1) {
+      while (enemies[enemies.length-1].color == pinkEI) {
+        var rand = getRandomIntInclusive(0, rocketTypes.length-1);
+        enemies[enemies.length-1] = ({
+          desc: rocketTypes[rand].desc,
+          dir: enemy.dir, 
+          x: enemy.x, 
+          y: enemy.y, 
+          w: BOXWH, 
+          h: BOXWH, 
+          speed: rocketTypes[rand].speed+SoffSet, 
+          color: rocketTypes[rand].color,
+          current: enemy.current, 
+          pixel: rocketTypes[rand].pixel,
+          health: rocketTypes[rand].health, 
+        });
+      }
+      enemies[enemies.length-1].x = enemy.x;
+      enemies[enemies.length-1].y = enemy.y;
+      enemies[enemies.length-1].dir =  enemy.dir;
+      enemies[enemies.length-1].current = enemy.current;
 
+    }
+
+
+  } // dir: 0 --> UP,   1 --> RIGHT,   2 --> DOWN,   3 --> LEFT
 }
 
 function shootGunner() {
@@ -464,7 +649,7 @@ drawBullets()
 drawTowers();
 drawEnemies();
 moveEnemies();
-generateEnemies(100);
+generateEnemies(100, {x: -1, y: 0});
 
 setInterval(shootGunner, GUNNERFIRERATE);
 setInterval(shootCannon, CANNONFIRERATE);
@@ -493,7 +678,7 @@ function isInsideCannon(pos, arr) {
     for (let i =0; i < arr.length; i++) {
       if (arr[i] != null) {
         if (pos.x+CANNONRANGE > arr[i].x && pos.x-CANNONRANGE < arr[i].x + arr[i].w && pos.y-CANNONRANGE < arr[i].y + arr[i].h && pos.y+CANNONRANGE > arr[i].y) {
-          arr[i] = null;
+          arr[i].health -= 5;
           found = true;
         }
       }
