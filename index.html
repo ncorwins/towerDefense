@@ -124,7 +124,8 @@ var heroButtons = [{
   real: emptyGunner,
   bullet: gunnerball,
   price: 200,
-  damage: 1
+  damage: 1,
+  kills: 0
 },
   {
   type: CANNON,
@@ -136,7 +137,8 @@ var heroButtons = [{
   real: emptyCannon,
   bullet: cannonball,
   price: 300,
-  damage: 5
+  damage: 5,
+  kills: 0
 },
   {
   type: SNIPER,
@@ -148,7 +150,8 @@ var heroButtons = [{
   real: emptySniper,
   bullet: "red",
   price: 500,
-  damage: 10
+  damage: 10,
+  kills: 0
 }]
 
 var selectedLevelMap = level1;
@@ -518,7 +521,7 @@ function drawTowers() {
       c.drawImage(towers[i].blankimg, towers[i].x, towers[i].y, towers[i].w, towers[i].h);
       //c.drawImage(towers[i].img, towers[i].x, towers[i].y, towers[i].w, towers[i].h);
       var angle = ((Math.atan2(towers[i].dy, towers[i].dx) * 180) / Math.PI);
-      drawRotated(Math.round(angle+90), towers[i]); // angle + 90 since we start at pi/2
+        drawRotated(Math.round(angle+90), towers[i]); // angle + 90 since we start at pi/2
     }
 
   window.requestAnimationFrame(drawTowers);
@@ -557,24 +560,6 @@ function drawRotatedEnemies(degrees, tower) {
   // draw the image
   // since the context is rotated, the image will be rotated also
   c.drawImage(tower.color, -ENEMYSIZE/2,-ENEMYSIZE/2, ENEMYSIZE, ENEMYSIZE);
-
-  // we’re done with the rotating so restore the unrotated context
-  c.restore();
-}
-
-function drawRotatedCannon(degrees, tower) {
-  //c.drawImage(bullets[i].twr.bullet, bullets[i].x, bullets[i].y, bullets[i].w*2, bullets[i].h*2);
-  c.save();
-
-// move to the center of the canvas
-  c.translate(tower.x+tower.w/2, tower.y+tower.h/2);
-
-  // rotate the canvas to the specified degrees
-  c.rotate(degrees*Math.PI/180);
-
-  // draw the image
-  // since the context is rotated, the image will be rotated also
-  c.drawImage(tower.twr.bullet, -tower.w/2,-tower.h/2, tower.w*2, tower.h*2);
 
   // we’re done with the rotating so restore the unrotated context
   c.restore();
@@ -629,7 +614,7 @@ function drawBullets() {
     }
     else if (bullets[i].twr.type == CANNON) {
       //drawRotatedCannon(seconds*60 % 365, bullets[i]);
-      c.drawImage(bullets[i].twr.bullet, bullets[i].x,bullets[i].y, bullets[i].w*2, bullets[i].h*2);
+      c.drawImage(cannonball, bullets[i].x,bullets[i].y, bullets[i].w*2, bullets[i].h*2);
     }
       bullets[i].x += bullets[i].dx;
       bullets[i].y += bullets[i].dy;
@@ -902,6 +887,7 @@ function shootSniper() {
   if (active) {
     for (let i = 0; i < towers.length; i++) {
       if (towers[i].type == SNIPER) {
+        towers[i].kills = 0;
         addBullet({x: 0, y: 0, w: 0, h: 0}, towers[i]);
       }
     }
@@ -1019,6 +1005,9 @@ function isInsideCannon(pos, arr) {
       if (arr[i] != null) {
         if (pos.x+CANNONRANGE > arr[i].x && pos.x-CANNONRANGE < arr[i].x + arr[i].w && pos.y-CANNONRANGE < arr[i].y + arr[i].h && pos.y+CANNONRANGE > arr[i].y) {
           arr[i].health -= 5;
+          if (arr[i].health <= 0) {
+            //pos.twr.kills+=1;
+          }
           found = true;
         }
       }
@@ -1115,7 +1104,8 @@ canvas.addEventListener("mouseup", function (event) {
           blankimg: emptyGunner,
           img: gunnerImage,
           bullet: tmp.bullet,
-          damage: tmp.damage
+          damage: tmp.damage,
+          kills: 0
         });
       }
       else if (tmp.type == CANNON) {
@@ -1129,7 +1119,8 @@ canvas.addEventListener("mouseup", function (event) {
           blankimg: emptyCannon,
           img: cannonImage,
           bullet: tmp.bullet,
-          damage: tmp.damage
+          damage: tmp.damage,
+          kills: 0
         })
       }
       else if (tmp.type == SNIPER) {
@@ -1143,7 +1134,8 @@ canvas.addEventListener("mouseup", function (event) {
           blankimg: emptySniper,
           img: sniperImage,
           bullet: tmp.bullet,
-          damage: tmp.damage
+          damage: tmp.damage,
+          kills: 0
         })
       }
 
@@ -1171,7 +1163,8 @@ canvas.addEventListener("mousedown", function (event) {
       imgs: selectedHero.imgs,
       bullet: selectedHero.bullet,
       price: selectedHero.price,
-      damage: selectedHero.damage
+      damage: selectedHero.damage,
+      kills: 0
     }
     tmp.x = mousePos.x-tmp.w/2;
     tmp.y = mousePos.y-tmp.h/2;
@@ -1189,8 +1182,8 @@ function addBullet(position, tower) {
       y: tower.y + tower.h/2, 
       dx: 0, 
       dy: 0, 
-      w: 0, 
-      h: 0,
+      w: 5, 
+      h: 5,
       twr: tower,
       active: true
     });
@@ -1201,8 +1194,8 @@ function addBullet(position, tower) {
       y: tower.y + tower.h/2, 
       dx: 0, 
       dy: 0, 
-      w: 0, 
-      h: 0,
+      w: 20, 
+      h: 20,
       twr: tower,
       active: true
     });
@@ -1213,8 +1206,8 @@ function addBullet(position, tower) {
       y: tower.y + tower.h/2, 
       dx: 0, 
       dy: 0, 
-      w: 0, 
-      h: 0,
+      w: 3, 
+      h: 3,
       twr: tower,
       active: true
     });
@@ -1242,6 +1235,9 @@ function updateBullet(bullet, position) {
   }
   else if (bullet.twr.type == SNIPER) {
     AVERAGESPEED = SNIPERSPEED;
+    if (bullet.twr.kills > 0) {
+      return;
+    }
   }
   
   var changeX = (position.x+position.w/2-bullet.x);
@@ -1335,7 +1331,9 @@ function checkHits() {
           if (hitEnemy != null) {
             playHit();
             hitEnemy.health-=bullets[x].twr.damage;
-            bullets[x] = null;
+            if (hitEnemy.health <= 0) {
+              bullets[x].twr.kills++;
+            }
           }
         }
 
