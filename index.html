@@ -326,7 +326,7 @@ var rocketTypes = [
     y: YOFFSET, 
     w: BOXWH, 
     h: BOXWH, 
-    speed: 20*GAMESPEED, 
+    speed: 2*GAMESPEED, 
     color: redEI,
     current: 0, 
     pixel: 0, 
@@ -711,6 +711,8 @@ function drawTowers() {
       if (towers[i].totalDamageApplied < 0) {
         towers[i].totalDamageApplied = 0;
       }
+      c.strokeStyle = "white";
+      c.strokeRect(towers[selectedTower].x, towers[selectedTower].y, towers[selectedTower].w, towers[selectedTower].h);
       drawStroked(Math.ceil(towers[i].totalDamageApplied), towers[i].x+8, towers[i].y+12);
       //c.drawImage(towers[i].imgs[1], towers[i].x, towers[i].y, towers[i].w, towers[i].h);
       var angle = ((Math.atan2(towers[i].dy, towers[i].dx) * 180) / Math.PI);
@@ -1351,8 +1353,6 @@ function drawUpgrades() {
         arrowButtons[i].x+=75*scale;
         arrowButtons[i].y+=38*scale;
       }
-      c.strokeStyle = "white";
-      c.strokeRect(towers[selectedTower].x, towers[selectedTower].y, towers[selectedTower].w, towers[selectedTower].h);
       c.font = "20px ArcadeClassic";
       c.fillText("Firerate", baseX+40*scale, baseY+12*scale);
       c.fillText("Damage", baseX+40*scale, baseY+12*scale+30*scale);
