@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <link href="https://fonts.cdnfonts.com/css/arcade-classic" rel="stylesheet">
 <title>Tower Defense</title>
+<link rel="icon" href="images/cannon/cannonball.png">
 <body>
 <body style="background-color:#000000;">
   <canvas id="myCanvas" width='1300' height='900' style="background-color:#000000"></canvas>
@@ -46,11 +47,17 @@ const YOFFSET = (canvas.height-GAMEHEIGHT)/2;
 
 // GAMEPLAY MECHANICS
 const GAMESPEED = .25;
-const CANNONRANGE = 20;
+
 const GUNNERSPEED = 5*GAMESPEED;
+const GUNNERFIRERATE = 100*(1/GAMESPEED);
+
+const CANNONRANGE = 20;
 const CANNONSPEED = 2*GAMESPEED;
 const CANNONFIRERATE = 500*(1/GAMESPEED);
-const GUNNERFIRERATE = 100*(1/GAMESPEED);
+
+const SNIPERSPEED = 25*GAMESPEED;
+const SNIPERFIRERATE = 300*(1/GAMESPEED);
+
 const ENEMYSIZE = 70;
 
 
@@ -74,6 +81,11 @@ cannonImage.src = "images/cannon/cannon.png";
 var cannonball = new Image();
 cannonball.src = "images/cannon/cannonball.png";
 
+var sniperImage = new Image();
+sniperImage.src = "images/sniper/SniperImage.png";
+var emptySniper = new Image();
+emptySniper.src = "images/sniper/emptySniper.png";
+
 var backG = new Image();
 backG.src = "images/backgtd2.png";
 
@@ -96,6 +108,7 @@ var seconds = 0;
 var towers = []
 var GUNNER = "gunner";
 var CANNON = "cannon";
+var SNIPER = "sniper";
 
 var bullets = []
 const TOWEROFFSETX = 72;
@@ -110,7 +123,8 @@ var heroButtons = [{
   imgs: [emptyblank, gunnerImage],
   real: emptyGunner,
   bullet: gunnerball,
-  price: 200
+  price: 200,
+  damage: 1
 },
   {
   type: CANNON,
@@ -121,8 +135,20 @@ var heroButtons = [{
   imgs: [emptyblank, cannonImage],
   real: emptyCannon,
   bullet: cannonball,
-  price: 300
-
+  price: 300,
+  damage: 5
+},
+  {
+  type: SNIPER,
+  x: 41, 
+  y: 209+TOWEROFFSETY, 
+  w: BOXWH,
+  h: BOXWH,
+  imgs: [emptyblank, sniperImage],
+  real: emptySniper,
+  bullet: "red",
+  price: 500,
+  damage: 10
 }]
 
 var selectedLevelMap = level1;
@@ -145,6 +171,27 @@ function calcInstances() {
 }
 calcInstances();
 
+function playHit() { // for playing poof sound
+  var audio = new Audio();
+  audio.src = "sounds/hit.mp3";
+  audio.volume = .005;
+  audio.currentTime = 0; // Reset audio to start
+  audio.play();
+}
+function playCannon() { // for playing poof sound
+  var audio = new Audio();
+  audio.src = "sounds/cannon.mp3";
+  audio.volume = .005;
+  audio.currentTime = 0; // Reset audio to start
+  audio.play();
+}
+function playClick() { // for playing poof sound
+  var audio = new Audio();
+  audio.src = "sounds/click.m4a";
+  audio.volume = .05;
+  audio.currentTime = 1; // Reset audio to start
+  audio.play();
+}
 var nextWaveBlank = new Image();
 nextWaveBlank.src = "images/nextWave/pixil-frame-0.png";
 var wave0 = new Image();
@@ -573,6 +620,13 @@ function drawBullets() {
       c.fill();
       //c.drawImage(bullets[i].twr.bullet, bullets[i].x, bullets[i].y, bullets[i].w*2, bullets[i].h*2);
     }
+    else if (bullets[i].twr.type == SNIPER) {
+      c.fillStyle = "red";
+      c.beginPath();
+      c.arc(bullets[i].x + bullets[i].w/2, bullets[i].y + bullets[i].h/2, 3, 0, Math.PI * 2);
+      c.closePath();
+      c.fill();
+    }
     else if (bullets[i].twr.type == CANNON) {
       //drawRotatedCannon(seconds*60 % 365, bullets[i]);
       c.drawImage(bullets[i].twr.bullet, bullets[i].x,bullets[i].y, bullets[i].w*2, bullets[i].h*2);
@@ -828,7 +882,27 @@ function shootGunner() {
   if (active) {
     for (let i = 0; i < towers.length; i++) {
       if (towers[i].type == GUNNER) {
-        addBullet({x: 0, y: 0, w: BOXWH/2, h: BOXWH/2}, towers[i]);
+        addBullet({x: 0, y: 0, w: 0, h: 0}, towers[i]);
+      }
+    }
+  }
+
+}
+
+function shootSniper() {
+  if (enemies.length == 0) {
+    return;
+  }
+  var active = false;
+  for (let i = 0; i < enemies.length; i++) {
+    if (enemies[i].active) {
+      active = true;
+    }
+  }
+  if (active) {
+    for (let i = 0; i < towers.length; i++) {
+      if (towers[i].type == SNIPER) {
+        addBullet({x: 0, y: 0, w: 0, h: 0}, towers[i]);
       }
     }
   }
@@ -917,6 +991,7 @@ generateWave(waves[waveCount]);
 waveCount++;
 setInterval(shootGunner, GUNNERFIRERATE);
 setInterval(shootCannon, CANNONFIRERATE);
+setInterval(shootSniper, SNIPERFIRERATE);
 setInterval(animsUI, 50);
 setInterval(Timer, 15);
 setInterval(adjustTowers, 10);
@@ -1027,6 +1102,7 @@ canvas.addEventListener("mouseup", function (event) {
   if (tmp != null) {
     snap();
     if (tmp != null) {
+      playClick();
       balance -= tmp.price;
       if (tmp.type == GUNNER) {
         towers.push({
@@ -1038,7 +1114,8 @@ canvas.addEventListener("mouseup", function (event) {
           target: -1,
           blankimg: emptyGunner,
           img: gunnerImage,
-          bullet: tmp.bullet
+          bullet: tmp.bullet,
+          damage: tmp.damage
         });
       }
       else if (tmp.type == CANNON) {
@@ -1051,7 +1128,22 @@ canvas.addEventListener("mouseup", function (event) {
           target: -1,
           blankimg: emptyCannon,
           img: cannonImage,
-          bullet: tmp.bullet
+          bullet: tmp.bullet,
+          damage: tmp.damage
+        })
+      }
+      else if (tmp.type == SNIPER) {
+        towers.push({
+          type: tmp.type,
+          x: tmp.x,
+          y: tmp.y,
+          w: tmp.w,
+          h: tmp.h,
+          target: -1,
+          blankimg: emptySniper,
+          img: sniperImage,
+          bullet: tmp.bullet,
+          damage: tmp.damage
         })
       }
 
@@ -1078,7 +1170,8 @@ canvas.addEventListener("mousedown", function (event) {
       h: selectedHero.h,
       imgs: selectedHero.imgs,
       bullet: selectedHero.bullet,
-      price: selectedHero.price
+      price: selectedHero.price,
+      damage: selectedHero.damage
     }
     tmp.x = mousePos.x-tmp.w/2;
     tmp.y = mousePos.y-tmp.h/2;
@@ -1089,11 +1182,6 @@ canvas.addEventListener("mousedown", function (event) {
 }, false);
 
 
-
-
-
-
-
 function addBullet(position, tower) {
   if (tower.type == GUNNER) {
     bullets.push({
@@ -1101,8 +1189,8 @@ function addBullet(position, tower) {
       y: tower.y + tower.h/2, 
       dx: 0, 
       dy: 0, 
-      w: BOXWH/6, 
-      h: BOXWH/6,
+      w: 0, 
+      h: 0,
       twr: tower,
       active: true
     });
@@ -1113,8 +1201,20 @@ function addBullet(position, tower) {
       y: tower.y + tower.h/2, 
       dx: 0, 
       dy: 0, 
-      w: BOXWH/3, 
-      h: BOXWH/3,
+      w: 0, 
+      h: 0,
+      twr: tower,
+      active: true
+    });
+  }
+  if (tower.type == SNIPER) {
+    bullets.push({
+      x: tower.x + tower.w/2, 
+      y: tower.y + tower.h/2, 
+      dx: 0, 
+      dy: 0, 
+      w: 0, 
+      h: 0,
       twr: tower,
       active: true
     });
@@ -1139,6 +1239,9 @@ function updateBullet(bullet, position) {
   }
   else if (bullet.twr.type == CANNON) {
     AVERAGESPEED = CANNONSPEED;
+  }
+  else if (bullet.twr.type == SNIPER) {
+    AVERAGESPEED = SNIPERSPEED;
   }
   
   var changeX = (position.x+position.w/2-bullet.x);
@@ -1188,6 +1291,7 @@ canvas.addEventListener('click', function(event) {
     if (enemies.length == 0) {
       bullets = [];
       waveCount+=1;
+      playClick();
       if (waveCount < waves.length) {
         generateWave(waves[waveCount]);
       }
@@ -1200,10 +1304,8 @@ canvas.addEventListener('click', function(event) {
 }, false);
 
 //HELPER FUNCTIONS
-
-function Timer() { // game timer
-  seconds+=.15;
-    for (let x = 0; x < bullets.length; x++) {
+function checkHits() {
+  for (let x = 0; x < bullets.length; x++) {
       if (bullets[x] == null) {
         continue;
       }
@@ -1211,25 +1313,41 @@ function Timer() { // game timer
           if (enemies[bullets[x].twr.target].active) {
             updateBullet(bullets[x], enemies[bullets[x].twr.target]);
           }
-
         }
         if (bullets[x].twr.type == GUNNER) {
           var hitEnemy = isInside({x: bullets[x].x, y: bullets[x].y}, enemies);
           if (hitEnemy != null) {
+            playHit();
+            hitEnemy.health-=bullets[x].twr.damage;
             bullets[x] = null;
-            hitEnemy.health--;
           }
         }
         else if (bullets[x].twr.type == CANNON) {
           var check = isInsideCannon({x: bullets[x].x, y: bullets[x].y}, enemies);
           if (check != null) {
+            playCannon();
             bullets[x] = null;
           }
           
         }
+        else if (bullets[x].twr.type == SNIPER) {
+          var hitEnemy = isInside({x: bullets[x].x, y: bullets[x].y}, enemies);
+          if (hitEnemy != null) {
+            playHit();
+            hitEnemy.health-=bullets[x].twr.damage;
+            bullets[x] = null;
+          }
+        }
 
 
-      }    
+      }
+}
+
+
+
+function Timer() { // game timer
+  seconds+=.15;
+  checkHits(); 
 }
 
 
