@@ -997,15 +997,6 @@ function blastFramesFunction() {
   }
 }
 
-function returnAudio() {
-  if (pauseAudio == -2) {
-    pauseAudio+=1;
-    if (pauseAudio == 2) {
-      pauseAudio = -1;
-    }
-  }
-
-}
 
 pathFind(level1, level1SS);
 createDirections();
@@ -1021,7 +1012,6 @@ waveCount++;
 setInterval(shootGunner, GUNNERFIRERATE);
 setInterval(shootCannon, CANNONFIRERATE);
 setInterval(shootSniper, SNIPERFIRERATE);
-setInterval(returnAudio, 2000);
 setInterval(animsUI, 50);
 setInterval(Timer, 15);
 setInterval(adjustTowers, 10);
