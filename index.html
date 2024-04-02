@@ -362,20 +362,20 @@ var rocketTypes = [
     health: 2, 
   },
   {
-    desc: "orange, OG",
+    desc: "orange, EXPLODE 50",
     dir: 1, 
     x: XOFFSET, 
     y: YOFFSET, 
     w: BOXWH, 
     h: BOXWH, 
-    speed: 2*GAMESPEED, 
+    speed: .5*GAMESPEED, 
     color: orangeEI,
     current: 0, 
     pixel: 0, 
-    health: 2, 
+    health: 31, 
   },
   {
-    desc: "purple, OG",
+    desc: "purple, EXPLODE 25",
     dir: 1, 
     x: XOFFSET, 
     y: YOFFSET, 
@@ -384,8 +384,8 @@ var rocketTypes = [
     speed: 2*GAMESPEED, 
     color: purpleEI,
     current: 0, 
-    pixel: 0, 
-    health: 2, 
+    pixel: 0,
+    health: 21,
   }
 ]
 
@@ -437,12 +437,12 @@ var waves = [
   },  
   {//redEI, blueEI, greenEI, grayEI, brownEI, pinkEI, limeEI, aquaEI, orangeEI, purpleEI
     arr: 
-    [10,       10,      10,       10,      10,      15,      10,      10,       10,       10],
+    [10,       10,      10,       10,      10,      15,      10,      10,       1,       5],
     waveNum: 9
   },  
   {//redEI, blueEI, greenEI, grayEI, brownEI, pinkEI, limeEI, aquaEI, orangeEI, purpleEI
     arr: 
-    [15,       15,      15,       15,      15,      20,      20,      15,       15,       15],
+    [15,       15,      15,       15,      15,      20,      20,      15,       2,       10],
     waveNum: 10
   }
 ]
@@ -703,6 +703,12 @@ function moveEnemies() {
         generateEnemies(10, enemies[i]);
         //clean();
       }
+      if (enemies[i].color == purpleEI) {
+        generateEnemies(25, enemies[i]);
+      }
+      if (enemies[i].color == orangeEI) {
+        generateEnemies(50, enemies[i]);
+      }
       enemies[i] = null;
     }
     if (enemies[i] == null) {
@@ -800,7 +806,7 @@ function drawHeroButtons() {
 function generateEnemies(numOfEnemies, enemy = {x: -1, y: 0}) { // generation for pink
   for (let i = 0; i < numOfEnemies; i++) {
     var rand = getRandomIntInclusive(0, rocketTypes.length-1);
-    var SoffSet = 1*((numOfEnemies-i)/numOfEnemies);
+    var SoffSet = (1)*((numOfEnemies-i)/numOfEnemies) + .25;
     enemies.push({
       desc: rocketTypes[rand].desc,
       dir: rocketTypes[rand].dir, 
@@ -816,7 +822,7 @@ function generateEnemies(numOfEnemies, enemy = {x: -1, y: 0}) { // generation fo
       active: false
     });
     if (enemy.x != -1) {
-      while (enemies[enemies.length-1].color == pinkEI) {
+      while (enemies[enemies.length-1].color == pinkEI || enemies[enemies.length-1].color == purpleEI) {
         var rand = getRandomIntInclusive(0, rocketTypes.length-1);
         enemies[enemies.length-1] = ({
           desc: rocketTypes[rand].desc,
