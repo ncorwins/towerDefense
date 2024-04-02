@@ -1,11 +1,9 @@
+
 <!DOCTYPE html>
-<link href="https://fonts.cdnfonts.com/css/arcade-classic" rel="stylesheet">
+<head>
+  <link href="https://fonts.cdnfonts.com/css/arcade-classic" rel="stylesheet">
 <title>Tower Defense</title>
 <link rel="icon" href="images/cannon/cannonball.png">
-<body>
-<body style="background-color:#000000;">
-  <canvas id="myCanvas" width='1300' height='900' style="background-color:#000000"></canvas>
-</body>
 <style>
 
 canvas {
@@ -24,7 +22,10 @@ canvas {
 @import url('https://fonts.cdnfonts.com/css/arcade-classic');
                         
 </style>
-                
+</head>
+<body style="background-color:#000000;">
+  <canvas id="myCanvas" width='1300' height='900' style="background-color:#000000"></canvas>
+</body>   
 <script>
 (function() {
   var requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame ||
@@ -293,7 +294,7 @@ var rocketTypes = [
     color: greenEI,
     current: 0, 
     pixel: 0,
-    health: 5, 
+    health: 6, 
   },
   {
     desc: "gray, FAST AND CHUNKY",
@@ -335,17 +336,17 @@ var rocketTypes = [
     health: 1, 
   },
   {
-    desc: "lime, OG",
+    desc: "lime, TANKY, medium speed",
     dir: 1, 
     x: XOFFSET, 
     y: YOFFSET, 
     w: BOXWH, 
     h: BOXWH, 
-    speed: 2*GAMESPEED, 
+    speed: 1.6*GAMESPEED, 
     color: limeEI,
     current: 0, 
     pixel: 0, 
-    health: 2, 
+    health: 20, 
   },
   {
     desc: "aqua, OG",
@@ -411,22 +412,22 @@ var waves = [
   },  
   {//redEI, blueEI, greenEI, grayEI, brownEI, pinkEI, limeEI, aquaEI, orangeEI, purpleEI
     arr: 
-    [10,       10,      10,       10,      10,      0,      0,      0,       0,       0],
+    [10,       10,      10,       10,      10,      0,      1,      0,       0,       0],
     waveNum: 4
   },  
   {//redEI, blueEI, greenEI, grayEI, brownEI, pinkEI, limeEI, aquaEI, orangeEI, purpleEI
     arr: 
-    [10,       10,      10,       10,      10,      1,      0,      0,       0,       0],
+    [10,       10,      10,       10,      10,      1,      3,      5,       0,       0],
     waveNum: 5
   },  
   {//redEI, blueEI, greenEI, grayEI, brownEI, pinkEI, limeEI, aquaEI, orangeEI, purpleEI
     arr: 
-    [10,       0,      0,       0,      0,      10,      0,      0,       0,       0],
+    [10,       0,      0,       0,      0,      10,      8,      5,       0,       0],
     waveNum: 6
   },  
   {//redEI, blueEI, greenEI, grayEI, brownEI, pinkEI, limeEI, aquaEI, orangeEI, purpleEI
     arr: 
-    [10,       10,      10,       0,      0,      10,      0,      0,       0,       0],
+    [10,       10,      10,       0,      0,      10,      0,      5,       0,       0],
     waveNum: 7
   },  
   {//redEI, blueEI, greenEI, grayEI, brownEI, pinkEI, limeEI, aquaEI, orangeEI, purpleEI
@@ -436,12 +437,12 @@ var waves = [
   },  
   {//redEI, blueEI, greenEI, grayEI, brownEI, pinkEI, limeEI, aquaEI, orangeEI, purpleEI
     arr: 
-    [10,       10,      10,       10,      10,      10,      10,      10,       10,       10],
+    [10,       10,      10,       10,      10,      15,      10,      10,       10,       10],
     waveNum: 9
   },  
   {//redEI, blueEI, greenEI, grayEI, brownEI, pinkEI, limeEI, aquaEI, orangeEI, purpleEI
     arr: 
-    [15,       15,      15,       15,      15,      15,      15,      15,       15,       15],
+    [15,       15,      15,       15,      15,      20,      20,      15,       15,       15],
     waveNum: 10
   }
 ]
@@ -1313,12 +1314,13 @@ canvas.addEventListener('click', function(event) {
     if (enemies.length == 0) {
       bullets = [];
       waveCount+=1;
+      let scalar = 12;
       playClick();
       if (waveCount < waves.length) {
         generateWave(waves[waveCount]);
       }
       else {
-        generateWave({arr: [10*(waveCount/5), 10*(waveCount/5), 10*(waveCount/5), 10*(waveCount/5), 10*(waveCount/5), 10*(waveCount/5), 10*(waveCount/5), 10*(waveCount/5), 10*(waveCount/5), 10*(waveCount/5)], waveNum: waveCount});
+        generateWave({arr: [scalar*(waveCount/5), scalar*(waveCount/5), scalar*(waveCount/5), scalar*(waveCount/5), scalar*(waveCount/5), scalar*(waveCount/5), scalar*(waveCount/5), scalar*(waveCount/5), scalar*(waveCount/5), scalar*(waveCount/5)], waveNum: waveCount});
       }
 
     }
