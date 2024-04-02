@@ -224,7 +224,7 @@ var heroButtons = [{
   real: emptySniper,
   bullet: "red",
   price: 500,
-  damage: 10,
+  damage: 7,
   kills: 0,
   totalDamageApplied: 0,
   speed: 30*GAMESPEED,
@@ -326,11 +326,11 @@ var rocketTypes = [
     y: YOFFSET, 
     w: BOXWH, 
     h: BOXWH, 
-    speed: 2*GAMESPEED, 
+    speed: 20*GAMESPEED, 
     color: redEI,
     current: 0, 
     pixel: 0, 
-    health: 1, 
+    health: 2, 
   },
   {
     desc: "blue, FAST",
@@ -343,7 +343,7 @@ var rocketTypes = [
     color: blueEI,
     current: 0, 
     pixel: 0,
-    health: 1, 
+    health: 3, 
   },
   {
     desc: "green, SLOW CHUNKY BOY",
@@ -356,7 +356,7 @@ var rocketTypes = [
     color: greenEI,
     current: 0, 
     pixel: 0,
-    health: 6, 
+    health: 9, 
   },
   {
     desc: "gray, FAST AND CHUNKY",
@@ -369,7 +369,7 @@ var rocketTypes = [
     color: grayEI,
     current: 0, 
     pixel: 0,
-    health: 4, 
+    health: 8, 
   },  
   {
     desc: "brown, slow and bad",
@@ -382,7 +382,7 @@ var rocketTypes = [
     color: brownEI,
     current: 0, 
     pixel: 0,
-    health: 1, 
+    health: 2, 
   },
   {
     desc: "pink, dies spawns more",
@@ -395,7 +395,7 @@ var rocketTypes = [
     color: pinkEI,
     current: 0, 
     pixel: 0,
-    health: 1, 
+    health: 15, 
   },
   {
     desc: "lime, TANKY, medium speed",
@@ -408,7 +408,7 @@ var rocketTypes = [
     color: limeEI,
     current: 0, 
     pixel: 0, 
-    health: 20, 
+    health: 25, 
   },
   {
     desc: "aqua, OG",
@@ -434,7 +434,7 @@ var rocketTypes = [
     color: orangeEI,
     current: 0, 
     pixel: 0, 
-    health: 31, 
+    health: 51, 
   },
   {
     desc: "purple, EXPLODE 25",
@@ -447,7 +447,7 @@ var rocketTypes = [
     color: purpleEI,
     current: 0, 
     pixel: 0,
-    health: 21,
+    health: 26,
   }
 ]
 
@@ -711,14 +711,17 @@ function drawTowers() {
       if (towers[i].totalDamageApplied < 0) {
         towers[i].totalDamageApplied = 0;
       }
-      drawStroked(towers[i].totalDamageApplied, towers[i].x+8, towers[i].y+12);
+      drawStroked(Math.ceil(towers[i].totalDamageApplied), towers[i].x+8, towers[i].y+12);
       //c.drawImage(towers[i].imgs[1], towers[i].x, towers[i].y, towers[i].w, towers[i].h);
       var angle = ((Math.atan2(towers[i].dy, towers[i].dx) * 180) / Math.PI);
       drawRotated(Math.round(angle+90), towers[i]); // angle + 90 since we start at pi/2
     }
     for (let i = 0; i < blastFrames.length; i++) {
       if (blastFrames[i] != null) {
-        c.drawImage(blastImages[blastFrames[i].frame], blastFrames[i].x, blastFrames[i].y);
+        if (blastFrames[i].type == 0) {
+          c.drawImage(blastImages[blastFrames[i].frame], blastFrames[i].x, blastFrames[i].y);
+        }
+        c.drawImage(blastImages[blastFrames[i].frame], blastFrames[i].x, blastFrames[i].y, 100, 100);
       }
 
     }
@@ -924,6 +927,14 @@ function moveEnemies() {
     if (enemies[i].pixel >= BOXWH) {
       enemies[i].current++;
       if (enemies[i].current == directions.length-1) {
+        playCannon();
+      blastFrames.push({
+        x: enemies[i].x-15,
+        y: enemies[i].y,
+        frame: 0,
+        type: 1
+      });
+      console.log(blastFrames);
         enemies[i] = null;
         continue;
       }
@@ -1254,13 +1265,6 @@ function shootCannon_4() {
 }
 
 
-
-
-
-
-
-
-
 function adjustTowers() { // updates target and tower dy dx
   var closestEnemy = -1;
   var maxNum = -1;
@@ -1349,6 +1353,28 @@ function drawUpgrades() {
       }
       c.strokeStyle = "white";
       c.strokeRect(towers[selectedTower].x, towers[selectedTower].y, towers[selectedTower].w, towers[selectedTower].h);
+      c.font = "20px ArcadeClassic";
+      c.fillText("Firerate", baseX+40*scale, baseY+12*scale);
+      c.fillText("Damage", baseX+40*scale, baseY+12*scale+30*scale);
+      c.fillText("Speed", baseX+40*scale, baseY+12*scale+30*scale*2);
+      if (towers[selectedTower].upgradeLevel0 < 4) {
+        c.fillText("$ " + (100 + towers[selectedTower].upgradeLevel0*100), baseX+80*scale, baseY+12*scale)
+      }
+      else {
+        c.fillText("MAX", baseX+80*scale, baseY+12*scale)
+      }
+      if (towers[selectedTower].upgradeLevel1 < 4) {
+        c.fillText("$ " + (100 + towers[selectedTower].upgradeLevel1*100), baseX+80*scale, baseY+12*scale+30*scale)
+      }
+      else {
+        c.fillText("MAX", baseX+80*scale, baseY+12*scale)
+      }
+      if (towers[selectedTower].upgradeLevel2 < 4) {
+        c.fillText("$ " + (100 + towers[selectedTower].upgradeLevel2*100), baseX+80*scale, baseY+12*scale+30*scale*2)
+      }
+      else {
+        c.fillText("MAX", baseX+80*scale, baseY+12*scale)
+      }
     }
   }
   window.requestAnimationFrame(drawUpgrades);
@@ -1414,14 +1440,16 @@ function isInside(pos, arr) {
 function isInsideCannon(pos, arr) {
   const ANIMOFFSET = 22;
   var found = false;
+  const upgLevel = (pos.twr.upgradeLevel1);
+  const damageCalc = upgLevel*pos.twr.damage*.25 + pos.twr.damage;
     for (let i =0; i < arr.length; i++) {
       if (arr[i] != null) {
         if (pos.x > arr[i].x && pos.x < arr[i].x + arr[i].w - ANIMOFFSET && pos.y < arr[i].y + arr[i].h - ANIMOFFSET && pos.y > arr[i].y) {
-          arr[i].health -= 5;
+          arr[i].health -= damageCalc;
           if (arr[i].health < 0) {
             pos.twr.totalDamageApplied+=arr[i].health;
           }
-          pos.twr.totalDamageApplied+=pos.twr.damage;
+          pos.twr.totalDamageApplied+=damageCalc;
           if (arr[i].health <= 0) {
             pos.twr.kills+=1;
           }
@@ -1438,11 +1466,11 @@ function isInsideCannon(pos, arr) {
       if (arr[i] != null) {
         if (pos.x+CANNONRANGE > arr[i].x && pos.x-CANNONRANGE < arr[i].x + arr[i].w - ANIMOFFSET && pos.y-CANNONRANGE < arr[i].y + arr[i].h - ANIMOFFSET && pos.y+CANNONRANGE > arr[i].y) {
           if (arr[i].health > 0) {
-            arr[i].health -= 5;
+            arr[i].health -= damageCalc;
             if (arr[i].health < 0) {
               pos.twr.totalDamageApplied+=arr[i].health;
             }
-            pos.twr.totalDamageApplied+=pos.twr.damage;
+            pos.twr.totalDamageApplied+=damageCalc;
           }
         }
       }
@@ -1647,7 +1675,7 @@ function updateBullet(bullet, position) {
     bullet.active = false;
   }
 
-  var AVERAGESPEED = bullet.twr.speed;
+  var AVERAGESPEED = bullet.twr.speed + .2 * bullet.twr.upgradeLevel2 * bullet.twr.speed;
 
 
   
@@ -1704,6 +1732,12 @@ canvas.addEventListener('click', function(event) {
   var selectedButton = isInside(mousePos, buttons);
   var selectedArrow = isInside(mousePos, arrowButtons);
   var selectedTowerCheck = isInside(mousePos, towers);
+  if (selectedButton == selectedArrow && selectedArrow == selectedTowerCheck && mousePos.x > XOFFSET && mousePos.x < XOFFSET+GAMEWIDTH && mousePos.y > YOFFSET && mousePos.y < YOFFSET +GAMEHEIGHT) {
+    selectedTower = null;
+    return;
+  }
+
+
   if (selectedTowerCheck != null) {
     for (let i = 0; i < towers.length; i++) {
           if (towers[i].x == selectedTowerCheck.x && towers[i].y == selectedTowerCheck.y) {
@@ -1728,21 +1762,29 @@ canvas.addEventListener('click', function(event) {
       if (towers.length > 0) {
         if (selectedArrow.ind == 0) {
           if (towers[selectedTower].upgradeLevel0 < 4) {
-            towers[selectedTower].upgradeLevel0++; // FIRE RATE
-
-            playClick();
+            if (balance > (100 + towers[selectedTower].upgradeLevel0*100)) {
+              towers[selectedTower].upgradeLevel0++; // FIRE RATE
+              balance -=(100 + towers[selectedTower].upgradeLevel0*100);
+              playClick();
+            }
           }
         }
         else if (selectedArrow.ind == 1) {
           if (towers[selectedTower].upgradeLevel1 < 4) {
-            towers[selectedTower].upgradeLevel1++;
-            playClick();
+            if (balance > (100 + towers[selectedTower].upgradeLevel1*100)) {
+              balance -=(100 + towers[selectedTower].upgradeLevel1*100);
+              towers[selectedTower].upgradeLevel1++; // DAMAGE
+              playClick();
+            }
           }
         }
         else if (selectedArrow.ind == 2) {
           if (towers[selectedTower].upgradeLevel2 < 4) {
-            towers[selectedTower].upgradeLevel2++;
-            playClick();
+            if (balance > (100 + towers[selectedTower].upgradeLevel2*100)) {
+              balance -=(100 + towers[selectedTower].upgradeLevel2*100);
+              towers[selectedTower].upgradeLevel2++; // SPEED
+              playClick();
+            }
           }
         }
 
@@ -1772,7 +1814,8 @@ function checkHits() {
             blastFrames.push({
               x: bullets[x].x+bullets[x].w/2,
               y: bullets[x].y+bullets[x].h/2,
-              frame: 0
+              frame: 0,
+              type: 0
             });
             bullets[x] = null;
           }
@@ -1783,11 +1826,13 @@ function checkHits() {
           if (hitEnemy != null) {
             playHit();
             if (hitEnemy.health > 0) {
-              hitEnemy.health-=bullets[x].twr.damage;
+              const upgLevel = (bullets[x].twr.upgradeLevel1);
+              const damageCalc = upgLevel*bullets[x].twr.damage*.25 + bullets[x].twr.damage;
+              hitEnemy.health-=damageCalc;
               if (hitEnemy.health < 0) {
                 bullets[x].twr.totalDamageApplied+=hitEnemy.health;
               }
-                bullets[x].twr.totalDamageApplied+=bullets[x].twr.damage;
+                bullets[x].twr.totalDamageApplied+=damageCalc;
               if (hitEnemy.health <= 0) {
                 bullets[x].twr.kills++;
               }
