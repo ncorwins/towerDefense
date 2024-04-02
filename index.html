@@ -1,6 +1,7 @@
 
 <!DOCTYPE html>
 <head>
+  <meta name = "viewport" content = "width=device-width, initial-scale=1.0">
   <link href="https://fonts.cdnfonts.com/css/arcade-classic" rel="stylesheet">
 <title>Tower Defense</title>
 <link rel="icon" href="images/cannon/cannonball.png">
@@ -52,12 +53,14 @@ const GAMESPEED = .25;
 const GUNNERSPEED = 5*GAMESPEED;
 const GUNNERFIRERATE = 100*(1/GAMESPEED);
 
-const CANNONRANGE = 20;
-const CANNONSPEED = 2*GAMESPEED;
-const CANNONFIRERATE = 500*(1/GAMESPEED);
 
-const SNIPERSPEED = 25*GAMESPEED;
-const SNIPERFIRERATE = 300*(1/GAMESPEED);
+const CANNONRANGE = 20;
+const CANNONSPEED = 3*GAMESPEED;
+const CANNONFIRERATE = 700*(1/GAMESPEED);
+
+var SNIPERPIERCE = 5;
+const SNIPERSPEED = 30*GAMESPEED;
+const SNIPERFIRERATE = 500*(1/GAMESPEED);
 
 const ENEMYSIZE = 70;
 
@@ -74,7 +77,7 @@ blast4.src = "images/blast/pixil-frame-4.png";
 
 var blastImages = [blast0, blast1, blast2, blast3, blast4];
 var blastFrames = [];
-
+var selectedTower = null;
 
 var waveCount = 0;
 
@@ -103,6 +106,50 @@ emptySniper.src = "images/sniper/emptySniper.png";
 
 var backG = new Image();
 backG.src = "images/backgtd2.png";
+
+var upgradeBackground = new Image();
+upgradeBackground.src = "images/UpgradeImages/pixil-frame-0.png";
+var upgradeArrowHoverImage = new Image();
+upgradeArrowHoverImage.src = "images/UpgradeImages/pixil-frame-1.png";
+var upgradeBar0 = new Image();
+upgradeBar0.src = "images/UpgradeImages/pixil-frame-2.png";
+var upgradeBar1 = new Image();
+upgradeBar1.src = "images/UpgradeImages/pixil-frame-3.png";
+var upgradeBar2 = new Image();
+upgradeBar2.src = "images/UpgradeImages/pixil-frame-4.png";
+var upgradeBar3 = new Image();
+upgradeBar3.src = "images/UpgradeImages/pixil-frame-5.png";
+var upgradeBar4 = new Image();
+upgradeBar4.src = "images/UpgradeImages/pixil-frame-6.png";
+var upgradeArrowImage = new Image();
+upgradeArrowImage.src = "images/UpgradeImages/pixil-frame-7.png";
+var upgradesImagesArr = [upgradeBar0, upgradeBar1, upgradeBar2, upgradeBar3, upgradeBar4];
+var upgradeArrowButton0 = {
+  x: 0,
+  y: 0, 
+  w: 40,
+  h: 30,
+  ind: 0,
+  hover: false
+}
+var upgradeArrowButton1 = {
+  x: 0,
+  y: 0, 
+  w: 40,
+  h: 30,
+  ind: 1,
+  hover: false
+}
+var upgradeArrowButton2 = {
+  x: 0,
+  y: 0, 
+  w: 40,
+  h: 30,
+  ind: 2,
+  hover: false
+}
+var arrowButtons = [upgradeArrowButton0, upgradeArrowButton1, upgradeArrowButton2];
+
 
 var enemies = [
 ];
@@ -141,7 +188,12 @@ var heroButtons = [{
   price: 200,
   damage: 1,
   kills: 0,
-  totalDamageApplied: 0
+  totalDamageApplied: 0,
+  speed: 5*GAMESPEED,
+  pierce: 1,
+  upgradeLevel0: 0,
+  upgradeLevel1: 0,
+  upgradeLevel2: 0
 },
   {
   type: CANNON,
@@ -155,7 +207,12 @@ var heroButtons = [{
   price: 300,
   damage: 5,
   kills: 0,
-  totalDamageApplied: 0
+  totalDamageApplied: 0,
+  speed: 3*GAMESPEED,
+  pierce: 1,
+  upgradeLevel0: 0,
+  upgradeLevel1: 0,
+  upgradeLevel2: 0
 },
   {
   type: SNIPER,
@@ -169,7 +226,12 @@ var heroButtons = [{
   price: 500,
   damage: 10,
   kills: 0,
-  totalDamageApplied: 0
+  totalDamageApplied: 0,
+  speed: 30*GAMESPEED,
+  pierce: 5,
+  upgradeLevel0: 0,
+  upgradeLevel1: 0,
+  upgradeLevel2: 0
 }]
 
 var selectedLevelMap = level1;
@@ -417,33 +479,148 @@ var waves = [
   },  
   {//redEI, blueEI, greenEI, grayEI, brownEI, pinkEI, limeEI, aquaEI, orangeEI, purpleEI
     arr: 
-    [10,       10,      10,       10,      10,      1,      3,      5,       0,       0],
+    [10,       10,      0,       10,      10,      0,      3,      5,       0,       0],
     waveNum: 5
   },  
   {//redEI, blueEI, greenEI, grayEI, brownEI, pinkEI, limeEI, aquaEI, orangeEI, purpleEI
     arr: 
-    [10,       0,      0,       0,      0,      10,      8,      5,       0,       0],
+    [10,       0,      0,       0,      0,      0,      8,      5,       0,       0],
     waveNum: 6
   },  
   {//redEI, blueEI, greenEI, grayEI, brownEI, pinkEI, limeEI, aquaEI, orangeEI, purpleEI
     arr: 
-    [10,       10,      10,       0,      0,      10,      0,      5,       0,       0],
+    [10,       10,      10,       0,      0,      0,      0,      5,       0,       0],
     waveNum: 7
   },  
   {//redEI, blueEI, greenEI, grayEI, brownEI, pinkEI, limeEI, aquaEI, orangeEI, purpleEI
     arr: 
-    [10,       10,      10,       0,      0,      10,      10,      10,       0,       0],
+    [10,       10,      10,       0,      0,      2,      10,      10,       0,       0],
     waveNum: 8
   },  
   {//redEI, blueEI, greenEI, grayEI, brownEI, pinkEI, limeEI, aquaEI, orangeEI, purpleEI
     arr: 
-    [10,       10,      10,       10,      10,      15,      10,      10,       1,       5],
+    [10,       10,      10,       10,      10,      3,      10,      10,       0,       0],
     waveNum: 9
   },  
   {//redEI, blueEI, greenEI, grayEI, brownEI, pinkEI, limeEI, aquaEI, orangeEI, purpleEI
     arr: 
-    [15,       15,      15,       15,      15,      20,      20,      15,       2,       10],
+    [15,       15,      15,       15,      15,      4,      20,      15,       0,       0],
     waveNum: 10
+  }, 
+  {//redEI, blueEI, greenEI, grayEI, brownEI, pinkEI, limeEI, aquaEI, orangeEI, purpleEI
+    arr: 
+    [100,       0,      0,       0,      0,      0,      0,      0,       0,       0],
+    waveNum: 12
+  },  
+  {//redEI, blueEI, greenEI, grayEI, brownEI, pinkEI, limeEI, aquaEI, orangeEI, purpleEI
+    arr: 
+    [50,       50,      0,       0,      0,      0,      0,      0,       0,       0],
+    waveNum: 13
+  },  
+  {//redEI, blueEI, greenEI, grayEI, brownEI, pinkEI, limeEI, aquaEI, orangeEI, purpleEI
+    arr: 
+    [50,       50,      50,       0,      0,      0,      0,      0,       0,       0],
+    waveNum: 14
+  },  
+  {//redEI, blueEI, greenEI, grayEI, brownEI, pinkEI, limeEI, aquaEI, orangeEI, purpleEI
+    arr: 
+    [0,       0,      0,       40,      0,      0,      0,      0,       0,       0],
+    waveNum: 15
+  },
+  {//redEI, blueEI, greenEI, grayEI, brownEI, pinkEI, limeEI, aquaEI, orangeEI, purpleEI
+      arr: 
+    [0,       0,      0,       40,      0,      0,      0,      0,       0,       0],
+    waveNum: 16
+  },
+  {//redEI, blueEI, greenEI, grayEI, brownEI, pinkEI, limeEI, aquaEI, orangeEI, purpleEI
+    arr: 
+    [0,       0,      0,       0,      150,      0,      0,      0,       0,       0],
+    waveNum: 17
+  },
+  {//redEI, blueEI, greenEI, grayEI, brownEI, pinkEI, limeEI, aquaEI, orangeEI, purpleEI
+    arr: 
+    [0,       0,      0,       0,      0,      0,      75,      0,       0,       0],
+    waveNum: 18
+  },
+  {//redEI, blueEI, greenEI, grayEI, brownEI, pinkEI, limeEI, aquaEI, orangeEI, purpleEI
+    arr: 
+    [0,       0,      0,       0,      0,      0,      0,      200,       0,       0],
+    waveNum: 19
+  },
+  {//redEI, blueEI, greenEI, grayEI, brownEI, pinkEI, limeEI, aquaEI, orangeEI, purpleEI
+    arr: 
+    [0,       0,      0,       0,      0,      5,      0,      0,       0,       0],
+    waveNum: 20
+  },
+  {//redEI, blueEI, greenEI, grayEI, brownEI, pinkEI, limeEI, aquaEI, orangeEI, purpleEI
+    arr: 
+    [0,       0,      0,       0,      0,      15,      0,      0,       0,       0],
+    waveNum: 21
+  },
+  {//redEI, blueEI, greenEI, grayEI, brownEI, pinkEI, limeEI, aquaEI, orangeEI, purpleEI
+    arr: 
+    [0,       0,      0,       0,      0,      0,      0,      0,       0,       5],
+    waveNum: 22
+  },  
+  {//redEI, blueEI, greenEI, grayEI, brownEI, pinkEI, limeEI, aquaEI, orangeEI, purpleEI
+    arr: 
+    [0,       0,      0,       0,      0,      0,      0,      0,       0,       10],
+    waveNum: 23
+  },
+  {//redEI, blueEI, greenEI, grayEI, brownEI, pinkEI, limeEI, aquaEI, orangeEI, purpleEI
+    arr: 
+    [0,       0,      0,       0,      0,      0,      0,      0,       0,       15],
+    waveNum: 24
+  },
+  {//redEI, blueEI, greenEI, grayEI, brownEI, pinkEI, limeEI, aquaEI, orangeEI, purpleEI
+    arr: 
+    [0,       0,      0,       0,      0,      0,      0,      0,       1,       0],
+    waveNum: 25
+  },
+  {//redEI, blueEI, greenEI, grayEI, brownEI, pinkEI, limeEI, aquaEI, orangeEI, purpleEI
+    arr: 
+    [0,       0,      0,       0,      0,      0,      0,      0,       3,       0],
+    waveNum: 26
+  },
+  {//redEI, blueEI, greenEI, grayEI, brownEI, pinkEI, limeEI, aquaEI, orangeEI, purpleEI
+    arr: 
+    [0,       0,      0,       0,      0,      0,      0,      0,       5,       0],
+    waveNum: 27
+  },
+  {//redEI, blueEI, greenEI, grayEI, brownEI, pinkEI, limeEI, aquaEI, orangeEI, purpleEI
+    arr: 
+    [15,       15,      15,       15,      15,      5,      20,      15,       1,       3],
+    waveNum: 28
+  },  
+  {//redEI, blueEI, greenEI, grayEI, brownEI, pinkEI, limeEI, aquaEI, orangeEI, purpleEI
+    arr: 
+    [15,       15,      15,       15,      15,      10,      20,      15,       1,       5],
+    waveNum: 29
+  },
+  {//redEI, blueEI, greenEI, grayEI, brownEI, pinkEI, limeEI, aquaEI, orangeEI, purpleEI
+    arr: 
+    [15,       15,      15,       15,      15,      0,      20,      15,       2,       0],
+    waveNum: 30
+  },  
+  {//redEI, blueEI, greenEI, grayEI, brownEI, pinkEI, limeEI, aquaEI, orangeEI, purpleEI
+    arr: 
+    [15,       15,      15,       15,      15,      5,      20,      15,       2,       3],
+    waveNum: 31
+  },  
+  {//redEI, blueEI, greenEI, grayEI, brownEI, pinkEI, limeEI, aquaEI, orangeEI, purpleEI
+    arr: 
+    [15,       15,      15,       15,      15,      5,      20,      15,       3,       5],
+    waveNum: 32
+  },  
+  {//redEI, blueEI, greenEI, grayEI, brownEI, pinkEI, limeEI, aquaEI, orangeEI, purpleEI
+    arr: 
+    [15,       15,      15,       15,      15,      10,      20,      15,       5,       10],
+    waveNum: 33
+  },  
+  {//redEI, blueEI, greenEI, grayEI, brownEI, pinkEI, limeEI, aquaEI, orangeEI, purpleEI
+    arr: 
+    [50,       50,      50,       50,      50,      10,      25,      50,       10,       15],
+    waveNum: 34
   }
 ]
 
@@ -799,7 +976,7 @@ function drawHeroButtons() {
   }
   c.font = "25px ArcadeClassic";
   drawStroked("Balance:   $ " + balance, GAMEWIDTH+XOFFSET, YOFFSET-50);
-  drawStroked("Wave   " + waveCount, GAMEWIDTH+XOFFSET, YOFFSET-20)
+  drawStroked("Wave   " + waveCount + "/35", GAMEWIDTH+XOFFSET, YOFFSET-20)
   window.requestAnimationFrame(drawHeroButtons);
 }
 
@@ -822,7 +999,7 @@ function generateEnemies(numOfEnemies, enemy = {x: -1, y: 0}) { // generation fo
       active: false
     });
     if (enemy.x != -1) {
-      while (enemies[enemies.length-1].color == pinkEI || enemies[enemies.length-1].color == purpleEI) {
+      while (enemies[enemies.length-1].color == pinkEI || enemies[enemies.length-1].color == purpleEI || enemies[enemies.length-1].color == orangeEI) {
         var rand = getRandomIntInclusive(0, rocketTypes.length-1);
         enemies[enemies.length-1] = ({
           desc: rocketTypes[rand].desc,
@@ -882,7 +1059,7 @@ function generateWave(wave) { // main generation func
   }
 }
 
-function shootGunner() {
+function shootGunner(tower) {
   clean();
   if (enemies.length == 0) {
     return;
@@ -894,16 +1071,65 @@ function shootGunner() {
     }
   }
   if (active) {
-    for (let i = 0; i < towers.length; i++) {
-      if (towers[i].type == GUNNER) {
-        addBullet({x: 0, y: 0, w: 0, h: 0}, towers[i]);
-      }
-    }
+    addBullet({x: 0, y: 0, w: 0, h: 0}, tower);
   }
 
 }
+function shootGunner_0() {
+  for (let i = 0; i < towers.length; i++) {
+    if (towers[i].type == GUNNER) {
+      if (towers[i].upgradeLevel0 == 0) {
+        shootGunner(towers[i]);
+      }
+    }
+  }
+}
+function shootGunner_1() {
+  for (let i = 0; i < towers.length; i++) {
+    if (towers[i].type == GUNNER) {
+      if (towers[i].upgradeLevel0 == 1) {
+        shootGunner(towers[i]);
+      }
+    }
+  }
+}
+function shootGunner_2() {
+  for (let i = 0; i < towers.length; i++) {
+    if (towers[i].type == GUNNER) {
+      if (towers[i].upgradeLevel0 == 2) {
+        shootGunner(towers[i]);
+      }
+    }
+  }
+}
+function shootGunner_3() {
+  for (let i = 0; i < towers.length; i++) {
+    if (towers[i].type == GUNNER) {
+      if (towers[i].upgradeLevel0 == 3) {
+        shootGunner(towers[i]);
+      }
+    }
+  }
+}
+function shootGunner_4() {
+  for (let i = 0; i < towers.length; i++) {
+    if (towers[i].type == GUNNER) {
+      if (towers[i].upgradeLevel0 == 4) {
+        shootGunner(towers[i]);
+      }
+    }
+  }
+}
 
-function shootSniper() {
+
+
+
+
+
+
+
+
+function shootSniper(tower) {
   clean();
   if (enemies.length == 0) {
     return;
@@ -915,15 +1141,125 @@ function shootSniper() {
     }
   }
   if (active) {
-    for (let i = 0; i < towers.length; i++) {
-      if (towers[i].type == SNIPER) {
-        towers[i].kills = 0;
-        addBullet({x: 0, y: 0, w: 0, h: 0}, towers[i]);
+    tower.kills = 0;
+    addBullet({x: 0, y: 0, w: 0, h: 0}, tower);
+  }
+}
+function shootSniper_0() {
+  for (let i = 0; i < towers.length; i++) {
+    if (towers[i].type == SNIPER) {
+      if (towers[i].upgradeLevel0 == 0) {
+        shootSniper(towers[i]);
       }
     }
   }
-
 }
+function shootSniper_1() {
+  for (let i = 0; i < towers.length; i++) {
+    if (towers[i].type == SNIPER) {
+      if (towers[i].upgradeLevel0 == 1) {
+        shootSniper(towers[i]);
+      }
+    }
+  }
+}
+function shootSniper_2() {
+  for (let i = 0; i < towers.length; i++) {
+    if (towers[i].type == SNIPER) {
+      if (towers[i].upgradeLevel0 == 2) {
+        shootSniper(towers[i]);
+      }
+    }
+  }
+}
+function shootSniper_3() {
+  for (let i = 0; i < towers.length; i++) {
+    if (towers[i].type == SNIPER) {
+      if (towers[i].upgradeLevel0 == 3) {
+        shootSniper(towers[i]);
+      }
+    }
+  }
+}
+function shootSniper_4() {
+  for (let i = 0; i < towers.length; i++) {
+    if (towers[i].type == SNIPER) {
+      if (towers[i].upgradeLevel0 == 4) {
+        shootSniper(towers[i]);
+      }
+    }
+  }
+}
+
+
+function shootCannon(tower) {
+  clean();
+  if (enemies.length == 0) {
+    return;
+  }
+  var active = false;
+  for (let i = 0; i < enemies.length; i++) {
+    if (enemies[i].active) {
+      active = true;
+    }
+  }
+  if (active) {
+    addBullet({x: 0, y: 0, w: BOXWH/2, h: BOXWH/2}, tower);
+  }
+}
+function shootCannon_0() {
+  for (let i = 0; i < towers.length; i++) {
+    if (towers[i].type == CANNON) {
+      if (towers[i].upgradeLevel0 == 0) {
+        shootCannon(towers[i]);
+      }
+    }
+  }
+}
+function shootCannon_1() {
+  for (let i = 0; i < towers.length; i++) {
+    if (towers[i].type == CANNON) {
+      if (towers[i].upgradeLevel0 == 1) {
+        shootCannon(towers[i]);
+      }
+    }
+  }
+}
+function shootCannon_2() {
+  for (let i = 0; i < towers.length; i++) {
+    if (towers[i].type == CANNON) {
+      if (towers[i].upgradeLevel0 == 2) {
+        shootCannon(towers[i]);
+      }
+    }
+  }
+}
+function shootCannon_3() {
+  for (let i = 0; i < towers.length; i++) {
+    if (towers[i].type == CANNON) {
+      if (towers[i].upgradeLevel0 == 3) {
+        shootCannon(towers[i]);
+      }
+    }
+  }
+}
+function shootCannon_4() {
+  for (let i = 0; i < towers.length; i++) {
+    if (towers[i].type == CANNON) {
+      if (towers[i].upgradeLevel0 == 4) {
+        shootCannon(towers[i]);
+      }
+    }
+  }
+}
+
+
+
+
+
+
+
+
 
 function adjustTowers() { // updates target and tower dy dx
   var closestEnemy = -1;
@@ -946,26 +1282,6 @@ function adjustTowers() { // updates target and tower dy dx
   }
 
 
-}
-
-function shootCannon() {
-  clean();
-  if (enemies.length == 0) {
-    return;
-  }
-  var active = false;
-  for (let i = 0; i < enemies.length; i++) {
-    if (enemies[i].active) {
-      active = true;
-    }
-  }
-  if (active) {
-    for (let i = 0; i < towers.length; i++) {
-      if (towers[i].type == CANNON) {
-        addBullet({x: 0, y: 0, w: BOXWH/2, h: BOXWH/2}, towers[i]);
-      }
-    }
-  }
 }
 
 function drawButtons() {
@@ -1004,6 +1320,39 @@ function blastFramesFunction() {
   }
 }
 
+function drawUpgrades() {
+  // if click on tower and open upgrades
+  if (towers.length > 0) {
+    if (selectedTower != null) {
+      const baseX = XOFFSET +GAMEWIDTH;
+      const baseY = 400;
+      const scale = 2;
+      const BARYOFF = 30;
+      const FBAROFF = -57;
+      c.drawImage(upgradeBackground, baseX, baseY, 100*scale, 100*scale);
+      c.drawImage(upgradesImagesArr[towers[selectedTower].upgradeLevel0], baseX, baseY+(BARYOFF+FBAROFF)*scale, 100*scale, 100*scale)
+      c.drawImage(upgradesImagesArr[towers[selectedTower].upgradeLevel1], baseX, baseY+(BARYOFF*2+FBAROFF)*scale, 100*scale, 100*scale)
+      c.drawImage(upgradesImagesArr[towers[selectedTower].upgradeLevel2], baseX, baseY+(BARYOFF*3+FBAROFF)*scale, 100*scale, 100*scale)
+      const UP1 = {x: baseX,
+        y: baseY+(BARYOFF+FBAROFF)*scale};
+      for (let i = 0; i < arrowButtons.length; i++) {
+        arrowButtons[i].x = UP1.x;
+        arrowButtons[i].y = UP1.y + (i*BARYOFF*scale);
+        if (arrowButtons[i].hover) {
+          c.drawImage(upgradeArrowHoverImage, arrowButtons[i].x, arrowButtons[i].y, 100*scale, 100*scale);
+        }
+        else {
+          c.drawImage(upgradeArrowImage, arrowButtons[i].x, arrowButtons[i].y, 100*scale, 100*scale);
+        }
+        arrowButtons[i].x+=75*scale;
+        arrowButtons[i].y+=38*scale;
+      }
+      c.strokeStyle = "white";
+      c.strokeRect(towers[selectedTower].x, towers[selectedTower].y, towers[selectedTower].w, towers[selectedTower].h);
+    }
+  }
+  window.requestAnimationFrame(drawUpgrades);
+}
 
 pathFind(level1, level1SS);
 createDirections();
@@ -1014,11 +1363,31 @@ drawBullets();
 drawTowers();
 drawEnemies();
 moveEnemies();
+drawUpgrades();
 generateWave(waves[waveCount]);
 waveCount++;
-setInterval(shootGunner, GUNNERFIRERATE);
-setInterval(shootCannon, CANNONFIRERATE);
-setInterval(shootSniper, SNIPERFIRERATE);
+
+
+
+setInterval(shootSniper_0, SNIPERFIRERATE);
+setInterval(shootSniper_1, SNIPERFIRERATE*(5/6));
+setInterval(shootSniper_2, SNIPERFIRERATE*(4/5));
+setInterval(shootSniper_3, SNIPERFIRERATE*(3/4));
+setInterval(shootSniper_4, SNIPERFIRERATE*(1/2));
+
+setInterval(shootGunner_0, GUNNERFIRERATE);
+setInterval(shootGunner_1, GUNNERFIRERATE*(5/6));
+setInterval(shootGunner_2, GUNNERFIRERATE*(4/5));
+setInterval(shootGunner_3, GUNNERFIRERATE*(3/4));
+setInterval(shootGunner_4, GUNNERFIRERATE*(1/2));
+
+setInterval(shootCannon_0, CANNONFIRERATE);
+setInterval(shootCannon_1, CANNONFIRERATE*(5/6));
+setInterval(shootCannon_2, CANNONFIRERATE*(4/5));
+setInterval(shootCannon_3, CANNONFIRERATE*(3/4));
+setInterval(shootCannon_4, CANNONFIRERATE*(1/2));
+
+
 setInterval(animsUI, 50);
 setInterval(Timer, 15);
 setInterval(adjustTowers, 10);
@@ -1043,7 +1412,7 @@ function isInside(pos, arr) {
 }
 
 function isInsideCannon(pos, arr) {
-  const ANIMOFFSET = 25;
+  const ANIMOFFSET = 22;
   var found = false;
     for (let i =0; i < arr.length; i++) {
       if (arr[i] != null) {
@@ -1131,8 +1500,8 @@ function snap() {
 canvas.addEventListener("mousemove", function (event) {
   var mousePos = getMousePos(canvas, event);
   //updateBullet(bullets[bullets.length-1], mousePos);
-  hoverButton = isInside(mousePos, buttons)
-
+  hoverButton = isInside(mousePos, buttons);
+  hoverButton2 = isInside(mousePos, arrowButtons);
   if (tmp != null) {
     tmp.x = mousePos.x-tmp.w/2;
     tmp.y = mousePos.y-tmp.h/2;
@@ -1140,10 +1509,19 @@ canvas.addEventListener("mousemove", function (event) {
   for (let i = 0; i < buttons.length; i++) {
     buttons[i].hover = false;
   }
-  if (hoverButton == null) {
+  for (let i = 0; i < arrowButtons.length; i++) {
+    arrowButtons[i].hover = false;
+  }
+  if (hoverButton == null && hoverButton2 == null) {
     return;    
   }
-  hoverButton.hover = true;
+  if (hoverButton == null) {
+    hoverButton2.hover = true;
+  }
+  else {
+    hoverButton.hover = true;
+  }
+
 
 
 }, false);
@@ -1167,9 +1545,14 @@ canvas.addEventListener("mouseup", function (event) {
           price: tmp.price,
           damage: tmp.damage,
           kills: tmp.kills,
-          totalDamageApplied: tmp.totalDamageApplied
+          totalDamageApplied: tmp.totalDamageApplied,
+          speed: tmp.speed,
+          pierce: tmp.pierce,
+          upgradeLevel0: tmp.upgradeLevel0,
+          upgradeLevel1: tmp.upgradeLevel1,
+          upgradeLevel2: tmp.upgradeLevel2,
         });
-
+        selectedTower = towers.length-1;
     }
 
   }
@@ -1197,7 +1580,12 @@ canvas.addEventListener("mousedown", function (event) {
       price: selectedHero.price,
       damage: selectedHero.damage,
       kills: selectedHero.kills,
-      totalDamageApplied: selectedHero.totalDamageApplied
+      totalDamageApplied: selectedHero.totalDamageApplied,
+      speed: selectedHero.speed,
+      pierce: selectedHero.pierce,
+      upgradeLevel0: selectedHero.upgradeLevel0,
+      upgradeLevel1: selectedHero.upgradeLevel1,
+      upgradeLevel2: selectedHero.upgradeLevel2
     }
     tmp.x = mousePos.x-tmp.w/2;
     tmp.y = mousePos.y-tmp.h/2;
@@ -1259,19 +1647,9 @@ function updateBullet(bullet, position) {
     bullet.active = false;
   }
 
-  var AVERAGESPEED = 1;
-  if (bullet.twr.type == GUNNER) {
-    AVERAGESPEED = GUNNERSPEED;
-  }
-  else if (bullet.twr.type == CANNON) {
-    AVERAGESPEED = CANNONSPEED;
-  }
-  else if (bullet.twr.type == SNIPER) {
-    AVERAGESPEED = SNIPERSPEED;
-    if (bullet.twr.kills > 0) {
-      return;
-    }
-  }
+  var AVERAGESPEED = bullet.twr.speed;
+
+
   
   var changeX = (position.x+position.w/2-bullet.x);
   var changeY = (position.y+position.w/2-bullet.y);
@@ -1307,30 +1685,73 @@ function updateBullet(bullet, position) {
 
 }
 
-
+function addWave() {
+  bullets = [];
+  waveCount+=1;
+  const scalar = 12;
+  if (waveCount < waves.length) {
+    generateWave(waves[waveCount]);
+  }
+  else {
+    const amt = scalar*(waveCount/5);
+    generateWave({arr: [amt,   amt,   amt,   amt,     amt,   amt,    amt,    amt,    amt,   amt], waveNum: waveCount});
+  }               // redEI,   blueEI,greenEI,grayEI,brownEI,pinkEI, limeEI, aquaEI, orangeEI, purpleEI
+}
 
 canvas.addEventListener('click', function(event) {
   var mousePos = getMousePos(canvas, event);
   //addBullet(mousePos, towers[towers.length-1]);
   var selectedButton = isInside(mousePos, buttons);
-  if (selectedButton == null) {
+  var selectedArrow = isInside(mousePos, arrowButtons);
+  var selectedTowerCheck = isInside(mousePos, towers);
+  if (selectedTowerCheck != null) {
+    for (let i = 0; i < towers.length; i++) {
+          if (towers[i].x == selectedTowerCheck.x && towers[i].y == selectedTowerCheck.y) {
+            selectedTower = i;
+          }
+        }
+
+
     return;
   }
-  if (selectedButton == nextWaveButton) {
-    if (enemies.length == 0) {
-      bullets = [];
-      waveCount+=1;
-      let scalar = 12;
-      playClick();
-      if (waveCount < waves.length) {
-        generateWave(waves[waveCount]);
-      }
-      else {
-        generateWave({arr: [scalar*(waveCount/5), scalar*(waveCount/5), scalar*(waveCount/5), scalar*(waveCount/5), scalar*(waveCount/5), scalar*(waveCount/5), scalar*(waveCount/5), scalar*(waveCount/5), scalar*(waveCount/5), scalar*(waveCount/5)], waveNum: waveCount});
-      }
+  if (selectedButton != null) {
+    if (selectedButton == nextWaveButton) {
+      if (enemies.length == 0) {
+        playClick();
+        addWave();
 
+      }
     }
   }
+  else if (selectedArrow != null){
+    if (towers[selectedTower] != null) {
+      if (towers.length > 0) {
+        if (selectedArrow.ind == 0) {
+          if (towers[selectedTower].upgradeLevel0 < 4) {
+            towers[selectedTower].upgradeLevel0++; // FIRE RATE
+
+            playClick();
+          }
+        }
+        else if (selectedArrow.ind == 1) {
+          if (towers[selectedTower].upgradeLevel1 < 4) {
+            towers[selectedTower].upgradeLevel1++;
+            playClick();
+          }
+        }
+        else if (selectedArrow.ind == 2) {
+          if (towers[selectedTower].upgradeLevel2 < 4) {
+            towers[selectedTower].upgradeLevel2++;
+            playClick();
+          }
+        }
+
+
+      }
+    }
+
+  }
+
 }, false);
 
 //HELPER FUNCTIONS
@@ -1344,24 +1765,7 @@ function checkHits() {
             updateBullet(bullets[x], enemies[bullets[x].twr.target]);
           }
         }
-        if (bullets[x].twr.type == GUNNER) {
-          var hitEnemy = isInside({x: bullets[x].x, y: bullets[x].y}, enemies);
-          if (hitEnemy != null) {
-            playHit();
-            if (hitEnemy.health > 0) {
-              hitEnemy.health-=bullets[x].twr.damage;
-              if (hitEnemy.health < 0) {
-                bullets[x].twr.totalDamageApplied+=hitEnemy.health;
-              }
-              bullets[x].twr.totalDamageApplied+=bullets[x].twr.damage;
-              if (hitEnemy.health <= 0) {
-                bullets[x].twr.kills++;
-              }
-              bullets[x] = null;
-            }
-          }
-        }
-        else if (bullets[x].twr.type == CANNON) {
+        if (bullets[x].twr.type == CANNON) {
           var check = isInsideCannon(bullets[x], enemies);
           if (check != null) {
             playCannon();
@@ -1374,7 +1778,7 @@ function checkHits() {
           }
           
         }
-        else if (bullets[x].twr.type == SNIPER) {
+        else if (bullets[x].twr.type == SNIPER || bullets[x].twr.type == GUNNER) {
           var hitEnemy = isInside({x: bullets[x].x, y: bullets[x].y}, enemies);
           if (hitEnemy != null) {
             playHit();
@@ -1386,6 +1790,11 @@ function checkHits() {
                 bullets[x].twr.totalDamageApplied+=bullets[x].twr.damage;
               if (hitEnemy.health <= 0) {
                 bullets[x].twr.kills++;
+              }
+              if (bullets[x].twr.kills >= bullets[x].twr.pierce) {
+                bullets[x] = null;
+                clean();
+                return;
               }
             }
 
