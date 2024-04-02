@@ -60,6 +60,20 @@ const SNIPERFIRERATE = 300*(1/GAMESPEED);
 
 const ENEMYSIZE = 70;
 
+var blast0 = new Image();
+blast0.src = "images/blast/pixil-frame-0.png";
+var blast1 = new Image();
+blast1.src = "images/blast/pixil-frame-1.png";
+var blast2 = new Image();
+blast2.src = "images/blast/pixil-frame-2.png";
+var blast3 = new Image();
+blast3.src = "images/blast/pixil-frame-3.png";
+var blast4 = new Image();
+blast4.src = "images/blast/pixil-frame-4.png";
+
+var blastImages = [blast0, blast1, blast2, blast3, blast4];
+var blastFrames = [];
+
 
 var waveCount = 0;
 
@@ -125,7 +139,8 @@ var heroButtons = [{
   bullet: gunnerball,
   price: 200,
   damage: 1,
-  kills: 0
+  kills: 0,
+  totalDamageApplied: 0
 },
   {
   type: CANNON,
@@ -138,7 +153,8 @@ var heroButtons = [{
   bullet: cannonball,
   price: 300,
   damage: 5,
-  kills: 0
+  kills: 0,
+  totalDamageApplied: 0
 },
   {
   type: SNIPER,
@@ -151,7 +167,8 @@ var heroButtons = [{
   bullet: "red",
   price: 500,
   damage: 10,
-  kills: 0
+  kills: 0,
+  totalDamageApplied: 0
 }]
 
 var selectedLevelMap = level1;
@@ -174,35 +191,43 @@ function calcInstances() {
 }
 calcInstances();
 
+var pauseAudio = -1;
+
 function playHit() { // for playing poof sound
-  var audio = new Audio();
-  audio.src = "sounds/hit.mp3";
-  audio.volume = .005;
-  audio.currentTime = 0; // Reset audio to start
-  audio.play();
+  if (pauseAudio == -1) {
+    var audio = new Audio();
+    audio.src = "sounds/hit.mp3";
+    audio.volume = .005;
+    audio.currentTime = 0; // Reset audio to start
+    audio.play();
+  }
+
 }
 function playCannon() { // for playing poof sound
-  var audio = new Audio();
-  audio.src = "sounds/cannon.mp3";
-  audio.volume = .005;
-  audio.currentTime = 0; // Reset audio to start
-  audio.play();
+  if (pauseAudio == -1) {
+    var audio = new Audio();
+    audio.src = "sounds/cannon.mp3";
+    audio.volume = .005;
+    audio.currentTime = 0; // Reset audio to start
+    audio.play();
+  }
 }
 function playClick() { // for playing poof sound
-  var audio = new Audio();
-  audio.src = "sounds/click.m4a";
-  audio.volume = .05;
-  audio.currentTime = 1; // Reset audio to start
-  audio.play();
+  if (pauseAudio == -1) {
+    var audio = new Audio();
+    audio.src = "sounds/click.m4a";
+    audio.volume = .05;
+    audio.currentTime = 1; // Reset audio to start
+    audio.play();
+  }
 }
-var nextWaveBlank = new Image();
-nextWaveBlank.src = "images/nextWave/pixil-frame-0.png";
-var wave0 = new Image();
-wave0.src = "images/nextWave/pixil-frame-1.png";
-var wave1 = new Image();
-wave1.src = "images/nextWave/pixil-frame-2.png";
-var wave2 = new Image();
-wave2.src = "images/nextWave/pixil-frame-3.png";
+
+window.onblur = function() {
+  pauseAudio = -1;
+};
+window.onfocus = function() {
+  pauseAudio = -2;
+};
 
 var start0 = new Image();
 start0.src = "images/startButton/pixil-frame-0.png";
@@ -518,10 +543,21 @@ function drawTowers() {
     c.fillStyle = "red";
 
     for (let i = 0; i < towers.length; i++) {
-      c.drawImage(towers[i].blankimg, towers[i].x, towers[i].y, towers[i].w, towers[i].h);
-      //c.drawImage(towers[i].img, towers[i].x, towers[i].y, towers[i].w, towers[i].h);
+      c.drawImage(towers[i].real, towers[i].x, towers[i].y, towers[i].w, towers[i].h);
+      c.font = "12px ArcadeClassic";
+      if (towers[i].totalDamageApplied < 0) {
+        towers[i].totalDamageApplied = 0;
+      }
+      drawStroked(towers[i].totalDamageApplied, towers[i].x+8, towers[i].y+12);
+      //c.drawImage(towers[i].imgs[1], towers[i].x, towers[i].y, towers[i].w, towers[i].h);
       var angle = ((Math.atan2(towers[i].dy, towers[i].dx) * 180) / Math.PI);
-        drawRotated(Math.round(angle+90), towers[i]); // angle + 90 since we start at pi/2
+      drawRotated(Math.round(angle+90), towers[i]); // angle + 90 since we start at pi/2
+    }
+    for (let i = 0; i < blastFrames.length; i++) {
+      if (blastFrames[i] != null) {
+        c.drawImage(blastImages[blastFrames[i].frame], blastFrames[i].x, blastFrames[i].y);
+      }
+
     }
 
   window.requestAnimationFrame(drawTowers);
@@ -542,7 +578,7 @@ function drawRotated(degrees, tower){ // draw  a tower with rotation
 
     // draw the image
     // since the context is rotated, the image will be rotated also
-    c.drawImage(tower.img, -tower.w/2,-tower.h/2, tower.w, tower.h);
+    c.drawImage(tower.imgs[1], -tower.w/2,-tower.h/2, tower.w, tower.h);
 
     // were done with the rotating so restore the unrotated context
     c.restore();
@@ -855,6 +891,7 @@ function generateWave(wave) { // main generation func
 }
 
 function shootGunner() {
+  clean();
   if (enemies.length == 0) {
     return;
   }
@@ -875,6 +912,7 @@ function shootGunner() {
 }
 
 function shootSniper() {
+  clean();
   if (enemies.length == 0) {
     return;
   }
@@ -919,6 +957,7 @@ function adjustTowers() { // updates target and tower dy dx
 }
 
 function shootCannon() {
+  clean();
   if (enemies.length == 0) {
     return;
   }
@@ -964,6 +1003,25 @@ function animsUI() {
   }
 }
 
+function blastFramesFunction() {
+  for (let i = 0; i < blastFrames.length; i++) {
+    blastFrames[i].frame++;
+    if (blastFrames[i].frame > 4) {
+      blastFrames[i] = null;
+    }
+  }
+}
+
+function returnAudio() {
+  if (pauseAudio == -2) {
+    pauseAudio+=1;
+    if (pauseAudio == 2) {
+      pauseAudio = -1;
+    }
+  }
+
+}
+
 pathFind(level1, level1SS);
 createDirections();
 drawBackground();
@@ -978,9 +1036,12 @@ waveCount++;
 setInterval(shootGunner, GUNNERFIRERATE);
 setInterval(shootCannon, CANNONFIRERATE);
 setInterval(shootSniper, SNIPERFIRERATE);
+setInterval(returnAudio, 2000);
 setInterval(animsUI, 50);
 setInterval(Timer, 15);
 setInterval(adjustTowers, 10);
+setInterval(blastFramesFunction, 50);
+
 
 function getRandomIntInclusive(min, max) { // random function for ghost movement, returns integers
   min = Math.ceil(min);
@@ -1000,15 +1061,21 @@ function isInside(pos, arr) {
 }
 
 function isInsideCannon(pos, arr) {
+  const ANIMOFFSET = 25;
   var found = false;
     for (let i =0; i < arr.length; i++) {
       if (arr[i] != null) {
-        if (pos.x+CANNONRANGE > arr[i].x && pos.x-CANNONRANGE < arr[i].x + arr[i].w && pos.y-CANNONRANGE < arr[i].y + arr[i].h && pos.y+CANNONRANGE > arr[i].y) {
+        if (pos.x > arr[i].x && pos.x < arr[i].x + arr[i].w - ANIMOFFSET && pos.y < arr[i].y + arr[i].h - ANIMOFFSET && pos.y > arr[i].y) {
           arr[i].health -= 5;
+          if (arr[i].health < 0) {
+            pos.twr.totalDamageApplied+=arr[i].health;
+          }
+          pos.twr.totalDamageApplied+=pos.twr.damage;
           if (arr[i].health <= 0) {
-            //pos.twr.kills+=1;
+            pos.twr.kills+=1;
           }
           found = true;
+          break;
         }
       }
     }
@@ -1016,7 +1083,20 @@ function isInsideCannon(pos, arr) {
     return null;
   }
   else {
-    return 0;
+    for (let i =0; i < arr.length; i++) {
+      if (arr[i] != null) {
+        if (pos.x+CANNONRANGE > arr[i].x && pos.x-CANNONRANGE < arr[i].x + arr[i].w - ANIMOFFSET && pos.y-CANNONRANGE < arr[i].y + arr[i].h - ANIMOFFSET && pos.y+CANNONRANGE > arr[i].y) {
+          if (arr[i].health > 0) {
+            arr[i].health -= 5;
+            if (arr[i].health < 0) {
+              pos.twr.totalDamageApplied+=arr[i].health;
+            }
+            pos.twr.totalDamageApplied+=pos.twr.damage;
+          }
+        }
+      }
+    }
+    return true;
   }
 
 }
@@ -1093,51 +1173,20 @@ canvas.addEventListener("mouseup", function (event) {
     if (tmp != null) {
       playClick();
       balance -= tmp.price;
-      if (tmp.type == GUNNER) {
         towers.push({
           type: tmp.type,
           x: tmp.x,
           y: tmp.y,
-          w: tmp.w,
+          w: tmp.w, 
           h: tmp.h,
-          target: -1,
-          blankimg: emptyGunner,
-          img: gunnerImage,
+          imgs: tmp.imgs,
+          real: tmp.real,
           bullet: tmp.bullet,
+          price: tmp.price,
           damage: tmp.damage,
-          kills: 0
+          kills: tmp.kills,
+          totalDamageApplied: tmp.totalDamageApplied
         });
-      }
-      else if (tmp.type == CANNON) {
-        towers.push({
-          type: tmp.type,
-          x: tmp.x,
-          y: tmp.y,
-          w: tmp.w,
-          h: tmp.h,
-          target: -1,
-          blankimg: emptyCannon,
-          img: cannonImage,
-          bullet: tmp.bullet,
-          damage: tmp.damage,
-          kills: 0
-        })
-      }
-      else if (tmp.type == SNIPER) {
-        towers.push({
-          type: tmp.type,
-          x: tmp.x,
-          y: tmp.y,
-          w: tmp.w,
-          h: tmp.h,
-          target: -1,
-          blankimg: emptySniper,
-          img: sniperImage,
-          bullet: tmp.bullet,
-          damage: tmp.damage,
-          kills: 0
-        })
-      }
 
     }
 
@@ -1161,10 +1210,12 @@ canvas.addEventListener("mousedown", function (event) {
       w: selectedHero.w, 
       h: selectedHero.h,
       imgs: selectedHero.imgs,
+      real: selectedHero.real,
       bullet: selectedHero.bullet,
       price: selectedHero.price,
       damage: selectedHero.damage,
-      kills: 0
+      kills: selectedHero.kills,
+      totalDamageApplied: selectedHero.totalDamageApplied
     }
     tmp.x = mousePos.x-tmp.w/2;
     tmp.y = mousePos.y-tmp.h/2;
@@ -1194,8 +1245,8 @@ function addBullet(position, tower) {
       y: tower.y + tower.h/2, 
       dx: 0, 
       dy: 0, 
-      w: 20, 
-      h: 20,
+      w: 15, 
+      h: 15,
       twr: tower,
       active: true
     });
@@ -1314,14 +1365,28 @@ function checkHits() {
           var hitEnemy = isInside({x: bullets[x].x, y: bullets[x].y}, enemies);
           if (hitEnemy != null) {
             playHit();
-            hitEnemy.health-=bullets[x].twr.damage;
-            bullets[x] = null;
+            if (hitEnemy.health > 0) {
+              hitEnemy.health-=bullets[x].twr.damage;
+              if (hitEnemy.health < 0) {
+                bullets[x].twr.totalDamageApplied+=hitEnemy.health;
+              }
+              bullets[x].twr.totalDamageApplied+=bullets[x].twr.damage;
+              if (hitEnemy.health <= 0) {
+                bullets[x].twr.kills++;
+              }
+              bullets[x] = null;
+            }
           }
         }
         else if (bullets[x].twr.type == CANNON) {
-          var check = isInsideCannon({x: bullets[x].x, y: bullets[x].y}, enemies);
+          var check = isInsideCannon(bullets[x], enemies);
           if (check != null) {
             playCannon();
+            blastFrames.push({
+              x: bullets[x].x+bullets[x].w/2,
+              y: bullets[x].y+bullets[x].h/2,
+              frame: 0
+            });
             bullets[x] = null;
           }
           
@@ -1330,10 +1395,17 @@ function checkHits() {
           var hitEnemy = isInside({x: bullets[x].x, y: bullets[x].y}, enemies);
           if (hitEnemy != null) {
             playHit();
-            hitEnemy.health-=bullets[x].twr.damage;
-            if (hitEnemy.health <= 0) {
-              bullets[x].twr.kills++;
+            if (hitEnemy.health > 0) {
+              hitEnemy.health-=bullets[x].twr.damage;
+              if (hitEnemy.health < 0) {
+                bullets[x].twr.totalDamageApplied+=hitEnemy.health;
+              }
+                bullets[x].twr.totalDamageApplied+=bullets[x].twr.damage;
+              if (hitEnemy.health <= 0) {
+                bullets[x].twr.kills++;
+              }
             }
+
           }
         }
 
@@ -1359,6 +1431,10 @@ function clean() {
   return el != null;
   });
   enemies = filtered;
+  var filtered = blastFrames.filter(function (el) {
+  return el != null;
+  });
+  blastFrames = filtered;
 }
 
 
