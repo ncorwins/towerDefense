@@ -191,43 +191,28 @@ function calcInstances() {
 }
 calcInstances();
 
-var pauseAudio = -1;
-
 function playHit() { // for playing poof sound
-  if (pauseAudio == -1) {
     var audio = new Audio();
     audio.src = "sounds/hit.mp3";
     audio.volume = .005;
     audio.currentTime = 0; // Reset audio to start
     audio.play();
-  }
 
 }
 function playCannon() { // for playing poof sound
-  if (pauseAudio == -1) {
     var audio = new Audio();
     audio.src = "sounds/cannon.mp3";
     audio.volume = .005;
     audio.currentTime = 0; // Reset audio to start
     audio.play();
-  }
 }
 function playClick() { // for playing poof sound
-  if (pauseAudio == -1) {
     var audio = new Audio();
     audio.src = "sounds/click.m4a";
     audio.volume = .05;
     audio.currentTime = 1; // Reset audio to start
     audio.play();
-  }
 }
-
-window.onblur = function() {
-  pauseAudio = -1;
-};
-window.onfocus = function() {
-  pauseAudio = -2;
-};
 
 var start0 = new Image();
 start0.src = "images/startButton/pixil-frame-0.png";
