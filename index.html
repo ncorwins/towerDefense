@@ -49,6 +49,8 @@ const YOFFSET = (canvas.height-GAMEHEIGHT)/2;
 
 // GAMEPLAY MECHANICS
 const GAMESPEED = .25;
+const PRICEMULT = 25;
+
 
 const GUNNERSPEED = 5*GAMESPEED;
 const GUNNERFIRERATE = 100*(1/GAMESPEED);
@@ -723,7 +725,10 @@ function drawTowers() {
         if (blastFrames[i].type == 0) {
           c.drawImage(blastImages[blastFrames[i].frame], blastFrames[i].x, blastFrames[i].y);
         }
-        c.drawImage(blastImages[blastFrames[i].frame], blastFrames[i].x, blastFrames[i].y, 100, 100);
+        else {
+          c.drawImage(blastImages[blastFrames[i].frame], blastFrames[i].x, blastFrames[i].y, 100, 100);
+        }
+
       }
 
     }
@@ -1057,7 +1062,7 @@ function generateWave(wave) { // main generation func
       enemies.push({
         desc: rocketTypes[i].desc,
         dir: rocketTypes[i].dir, 
-        x: XOFFSET-90-SoffSet*4,
+        x: XOFFSET-90-SoffSet*4/rocketTypes[i].speed,
         y: YOFFSET, 
         w: BOXWH, 
         h: BOXWH, 
@@ -1358,19 +1363,19 @@ function drawUpgrades() {
       c.fillText("Damage", baseX+40*scale, baseY+12*scale+30*scale);
       c.fillText("Speed", baseX+40*scale, baseY+12*scale+30*scale*2);
       if (towers[selectedTower].upgradeLevel0 < 4) {
-        c.fillText("$ " + (100 + towers[selectedTower].upgradeLevel0*100), baseX+80*scale, baseY+12*scale)
+        c.fillText("$ " + (PRICEMULT + towers[selectedTower].upgradeLevel0*PRICEMULT), baseX+80*scale, baseY+12*scale)
       }
       else {
         c.fillText("MAX", baseX+80*scale, baseY+12*scale)
       }
       if (towers[selectedTower].upgradeLevel1 < 4) {
-        c.fillText("$ " + (100 + towers[selectedTower].upgradeLevel1*100), baseX+80*scale, baseY+12*scale+30*scale)
+        c.fillText("$ " + (PRICEMULT + towers[selectedTower].upgradeLevel1*PRICEMULT), baseX+80*scale, baseY+12*scale+30*scale)
       }
       else {
         c.fillText("MAX", baseX+80*scale, baseY+12*scale)
       }
       if (towers[selectedTower].upgradeLevel2 < 4) {
-        c.fillText("$ " + (100 + towers[selectedTower].upgradeLevel2*100), baseX+80*scale, baseY+12*scale+30*scale*2)
+        c.fillText("$ " + (PRICEMULT + towers[selectedTower].upgradeLevel2*PRICEMULT), baseX+80*scale, baseY+12*scale+30*scale*2)
       }
       else {
         c.fillText("MAX", baseX+80*scale, baseY+12*scale)
@@ -1733,7 +1738,6 @@ canvas.addEventListener('click', function(event) {
   var selectedArrow = isInside(mousePos, arrowButtons);
   var selectedTowerCheck = isInside(mousePos, towers);
   if (selectedButton == selectedArrow && selectedArrow == selectedTowerCheck && mousePos.x > XOFFSET && mousePos.x < XOFFSET+GAMEWIDTH && mousePos.y > YOFFSET && mousePos.y < YOFFSET +GAMEHEIGHT) {
-    selectedTower = null;
     return;
   }
 
@@ -1762,29 +1766,37 @@ canvas.addEventListener('click', function(event) {
       if (towers.length > 0) {
         if (selectedArrow.ind == 0) {
           if (towers[selectedTower].upgradeLevel0 < 4) {
-            if (balance > (100 + towers[selectedTower].upgradeLevel0*100)) {
-              towers[selectedTower].upgradeLevel0++; // FIRE RATE
-              balance -=(100 + towers[selectedTower].upgradeLevel0*100);
-              playClick();
+            if (balance > 0) {
+              if (balance >= (PRICEMULT + towers[selectedTower].upgradeLevel0*PRICEMULT)) {
+                balance -=(PRICEMULT + towers[selectedTower].upgradeLevel0*PRICEMULT);
+                towers[selectedTower].upgradeLevel0++; // FIRE RATE
+                playClick();
+              }
             }
+
           }
         }
         else if (selectedArrow.ind == 1) {
           if (towers[selectedTower].upgradeLevel1 < 4) {
-            if (balance > (100 + towers[selectedTower].upgradeLevel1*100)) {
-              balance -=(100 + towers[selectedTower].upgradeLevel1*100);
-              towers[selectedTower].upgradeLevel1++; // DAMAGE
-              playClick();
+            if (balance > 0) {
+              if (balance >= (PRICEMULT + towers[selectedTower].upgradeLevel1*PRICEMULT)) {
+                balance -=(PRICEMULT + towers[selectedTower].upgradeLevel1*PRICEMULT);
+                towers[selectedTower].upgradeLevel1++; // DAMAGE
+                playClick();
+              }
             }
           }
         }
         else if (selectedArrow.ind == 2) {
           if (towers[selectedTower].upgradeLevel2 < 4) {
-            if (balance > (100 + towers[selectedTower].upgradeLevel2*100)) {
-              balance -=(100 + towers[selectedTower].upgradeLevel2*100);
-              towers[selectedTower].upgradeLevel2++; // SPEED
-              playClick();
+            if (balance > 0) {
+              if (balance >= (PRICEMULT + towers[selectedTower].upgradeLevel2*PRICEMULT)) {
+                balance -=(PRICEMULT + towers[selectedTower].upgradeLevel2*PRICEMULT);
+                towers[selectedTower].upgradeLevel2++; // SPEED
+                playClick();
+              }
             }
+
           }
         }
 
