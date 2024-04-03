@@ -39,12 +39,12 @@ var c = canvas.getContext("2d");
 c.font = "30px ArcadeClassic";
 c.imageSmoothingEnabled = false;
 
-var stage = 0;
+var stage = 2;
 /*//
 //  STAGE: 0 --> GAMEPLAY
 //  STAGE: 1 --> PAUSE
 //  STAGE: 2 --> MAIN MENU
-
+//  STAGE: 3 --> LEVEL SELECT
 //*/
 // HOME SCREEN
 var homeScreenBackground = new Image();
@@ -61,7 +61,32 @@ var homeScreenPlayButton = {
   h: 400,
   hover: false
 }
+// LEVEL SELECT SCREEN
+var levelLockedImage = new Image();
+levelLockedImage.src = "images/levelSelectScreen/levelLocked.png";
+var levelBoxImage = new Image();
+levelBoxImage.src = "images/levelSelectScreen/level.png";
+var levelArrows = new Image();
+levelArrows.src = "images/levelSelectScreen/arrows.png";
 
+var levelBoxRect = {
+  x: 150,
+  y: 100,
+  w: 1000,
+  h: 1000
+};
+var levelArrowsRect = {
+  x: 0,
+  y: 200,
+  w: canvas.width,
+  h: canvas.height
+};
+var levelBoxRectReal = {
+  x: 330,
+  y: 270,
+  w: 650,
+  h: 400
+};
 // GAME SCREEN
 
 const NUMCOLS = 15;
@@ -280,10 +305,40 @@ const level1 = [
 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 
 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0];
 const level1SS = [0,0];
-const level1ENTRY = 0; // 0 --> RIGHT, 1 --> LEFT, 2 --> UP, 3 --> DOWN
+
+const level2 = [
+0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 
+1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 
+1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 
+1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0];
+const level2SS = [0,4];
+
+
+const levelMap = [{
+  grid: level1,
+  ss: level1SS,
+  startingBalance: 600,
+  difficulty: 0,
+  background: backG
+},
+{
+  grid: level2,
+  ss: level2SS,
+  startingBalance: 600,
+  difficulty: 0,
+  background: null
+}]
+var selectedLevel = 0;
+//const level1ENTRY = 0; // 0 --> RIGHT, 1 --> LEFT, 2 --> UP, 3 --> DOWN
 
 var seconds = 0;
-var towers = []
+var towers = [];
 var GUNNER = "gunner";
 var CANNON = "cannon";
 var SNIPER = "sniper";
@@ -390,9 +445,6 @@ var heroButtons = [{
   upgradeLevel2: 0
 }]
 
-var selectedLevelMap = level1;
-var startingSquare = level1SS;
-
 
 
 
@@ -402,8 +454,8 @@ var startingSquare = level1SS;
 // USE https://gube.live/pingu/grid-template/
 var instances = 0;
 function calcInstances() {
-  for (let i = 0; i < selectedLevelMap.length; i++) {
-    if (selectedLevelMap[i] == 1) {
+  for (let i = 0; i < levelMap[selectedLevel].grid.length; i++) {
+    if (levelMap[selectedLevel].grid[i] == 1) {
       instances++;
     }
   }
@@ -788,7 +840,7 @@ var waves = [
 ]
 
 
-
+var enemiesLetIn = 0;
 
 
 var colorArr = [redEI, blueEI, greenEI, grayEI, brownEI, pinkEI, limeEI, aquaEI, orangeEI, purpleEI];
@@ -803,6 +855,7 @@ var coords = [];
 var directions = [];
 var currentRow = 0;
 var balance = 600;
+
 var drag = {
   sx: 0,
   sy: 0,
@@ -974,7 +1027,7 @@ function drawRotatedEnemies(degrees, tower) {
 }
 
 function createDirections() {
-  for (let i = 0; i < selectedLevelMap.length; i++) {
+  for (let i = 0; i < levelMap[selectedLevel].grid.length; i++) {
     if (i != 0 && i % NUMCOLS == 0) {
         currentRow++;
       }
@@ -983,7 +1036,7 @@ function createDirections() {
         y: YOFFSET + (currentRow)*BOXWH,
         w: BOXWH,
         h: BOXWH,
-        value: selectedLevelMap[i],
+        value: levelMap[selectedLevel].grid[i],
         rx: i % NUMCOLS,
         ry: currentRow
       });
@@ -1055,11 +1108,12 @@ function drawBackground() {
     return;
   }
   currentRow = 0;
-  for (let i = 0; i < selectedLevelMap.length; i++) {
+  c.drawImage(flesh, 0, 0, canvas.width, canvas.height);
+  for (let i = 0; i < levelMap[selectedLevel].grid.length; i++) {
     if (i != 0 && i % NUMCOLS == 0) {
       currentRow++;
     }
-    if (selectedLevelMap[i] == 0) {
+    if (levelMap[selectedLevel].grid[i] == 0) {
       c.fillStyle = "black";
     }
     else {
@@ -1067,8 +1121,9 @@ function drawBackground() {
     }
     c.fillRect(XOFFSET + (i % NUMCOLS)*BOXWH, YOFFSET + (currentRow)*BOXWH, GAMEWIDTH / NUMCOLS, GAMEHEIGHT / NUMROWS);
   }
-  c.drawImage(flesh, 0, 0, canvas.width, canvas.height);
-  c.drawImage(backG, XOFFSET, YOFFSET, GAMEWIDTH, GAMEHEIGHT);
+  if (levelMap[selectedLevel].background != null) {
+    c.drawImage(levelMap[selectedLevel].background, XOFFSET, YOFFSET, GAMEWIDTH, GAMEHEIGHT);
+  }
   window.requestAnimationFrame(drawBackground);
 }
 
@@ -1289,7 +1344,7 @@ function generateWave(wave) { // main generation func
         desc: rocketTypes[i].desc,
         dir: rocketTypes[i].dir, 
         x: XOFFSET-90-SoffSet*4,
-        y: YOFFSET, 
+        y: directions[0].y,
         w: BOXWH, 
         h: BOXWH, 
         speed: rocketTypes[i].speed, 
@@ -1783,7 +1838,7 @@ function drawMainScreen() {
     c.drawImage(homeScreenBackground, 0, 0, canvas.width, canvas.height);
     if (ticker != -500) {
       if (ticker < 400 && direction == 0) {
-        ticker++;
+        ticker+=4;
         c.fillStyle = "black";
         c.fillRect(homeScreenPlayButton.x+homeScreenPlayButton.w/2-4,0, 8, ticker*1.2);
         c.drawImage(homeScreenPlayButton1, homeScreenPlayButton.x, homeScreenPlayButton.y, homeScreenPlayButton.w, homeScreenPlayButton.h);
@@ -1794,7 +1849,7 @@ function drawMainScreen() {
       }
       else if ((ticker > -300)) {
         direction = 1;
-        ticker--;
+        ticker-=4;
         c.fillStyle = "black";
         c.fillRect(homeScreenPlayButton.x+homeScreenPlayButton.w/2-4,0, 8, ticker*1.2);
         c.drawImage(homeScreenPlayButton1, homeScreenPlayButton.x, homeScreenPlayButton.y-(400-ticker), homeScreenPlayButton.w, homeScreenPlayButton.h);
@@ -1802,9 +1857,89 @@ function drawMainScreen() {
         c.drawImage(purpleEI, 260+400+Math.abs(400-ticker*1), 650, 200, 200);
         c.drawImage(orangeEI, 260+400+Math.abs(400-ticker*1), 150, 200, 200);
         c.drawImage(limeEI, 260+400+Math.abs(400-ticker*1), 550, 200, 200);
-      }
-      else {
-        stage = 3;
+        if ((260 + 400 + Math.abs(400-ticker) >= canvas.width-150) && (260 + 400 + Math.abs(400-ticker) <= canvas.width-145)) {
+          blastFrames.push({
+              x: canvas.width-100,
+              y: 50,
+              frame: 0,
+              type: 2
+            });
+            blastFrames.push({
+              x: canvas.width-100,
+              y: 150,
+              frame: 0,
+              type: 2
+            });
+            blastFrames.push({
+              x: canvas.width-100,
+              y: 550,
+              frame: 0,
+              type: 2
+            });
+            blastFrames.push({
+              x: canvas.width-100,
+              y: 650,
+              frame: 0,
+              type: 2
+            });
+            blastFrames.push({
+              x: canvas.width-100,
+              y: 60,
+              frame: 0,
+              type: 2
+            });
+            blastFrames.push({
+              x: canvas.width-100,
+              y: 160,
+              frame: 0,
+              type: 2
+            });
+            blastFrames.push({
+              x: canvas.width-100,
+              y: 560,
+              frame: 0,
+              type: 2
+            });
+            blastFrames.push({
+              x: canvas.width-100,
+              y: 660,
+              frame: 0,
+              type: 2
+            });
+            blastFrames.push({
+              x: canvas.width-100,
+              y: 40,
+              frame: 0,
+              type: 2
+            });
+            blastFrames.push({
+              x: canvas.width-100,
+              y: 140,
+              frame: 0,
+              type: 2
+            });
+            blastFrames.push({
+              x: canvas.width-100,
+              y: 540,
+              frame: 0,
+              type: 2
+            });
+            blastFrames.push({
+              x: canvas.width-100,
+              y: 640,
+              frame: 0,
+              type: 2
+            });
+        }
+
+        for (let i = 0; i < blastFrames.length; i++) {
+              if (blastFrames[i] != null) {
+                c.drawImage(blastImages[blastFrames[i].frame], blastFrames[i].x, blastFrames[i].y, 200, 200);
+              }
+              if (blastFrames[i].frame == 4) {
+                stage = 3; // MOVE TO LEVEL SELECT AFTER ANIM
+              }
+            }
       }
     }
     else {
@@ -1827,14 +1962,62 @@ function drawMainScreen() {
 
 }
 
+function reset() {
+  enemiesLetIn = 0;
+  towers = [];
+  enemies = [];
+  for (let i = 0; i < heroButtons.length; i++) {
+    heroButtons[i].upgradeLevel0 = 0;
+    heroButtons[i].upgradeLevel1 = 0;
+    heroButtons[i].upgradeLevel2 = 0;
+  }
+  pathCoords = [];
+  pathFound = false;
+  startCoord = null;
+  previous = [];
+  tracker = 0;
+  lockedPath = "NONE";
+  tmp = null;
+  coords = [];
+  directions = [];
+  currentRow = 0;
+  balance = 600;
+  instances = 0;
+  waveCount = 0;
+  calcInstances();
+  pathFind(levelMap[selectedLevel].grid, levelMap[selectedLevel].ss);
+  createDirections();
+  generateWave(waves[waveCount]);
+  waveCount+=1;
+}
+
+function drawLevelSelect() {
+  if (stage != 3) {
+    window.requestAnimationFrame(drawLevelSelect);
+    return;
+  }
+  c.fillStyle = "white";
+  c.fillRect(0,0,canvas.width, canvas.height);
+  c.drawImage(levelArrows, levelArrowsRect.x, levelArrowsRect.y, levelArrowsRect.w, levelArrowsRect.h);
+  c.drawImage(levelBoxImage, levelBoxRect.x, levelBoxRect.y, levelBoxRect.w, levelBoxRect.h);
+  //c.strokeStyle = "black";
+  //c.strokeRect(levelBoxRectReal.x, levelBoxRectReal.y, levelBoxRectReal.w, levelBoxRectReal.h);
+  if (false) {
+    c.drawImage(levelLockedImage, levelBoxRect.x, levelBoxRect.y, levelBoxRect.w, levelBoxRect.h);
+
+  }
+
+  window.requestAnimationFrame(drawLevelSelect);
+}
+
+
 var ticker = -500;
 var direction = 0;
 
 
 
-pathFind(level1, level1SS);
-createDirections();
 drawBackground();
+drawLevelSelect();
 drawButtons();
 drawHeroButtons();
 drawBullets();
@@ -1843,8 +2026,6 @@ drawEnemies();
 moveEnemies();
 drawUpgrades();
 drawPauseMenu();
-generateWave(waves[waveCount]);
-waveCount+=1;
 
 // HOME PAGE
 drawMainScreen();
@@ -2061,13 +2242,13 @@ canvas.addEventListener("mousemove", function (event) {
       gameVolume = drag.value;
       const XBOUNDSCLOSE = XOFFSET + 90;
       const XBOUNDSFAR = XOFFSET + GAMEWIDTH - 144;
-      if (mousePos.x > XBOUNDSCLOSE && mousePos.x < XBOUNDSFAR) {
-        drag.ex = mousePos.x;
+      if (mousePos.x-25 > XBOUNDSCLOSE && mousePos.x-25 < XBOUNDSFAR) {
+        drag.ex = mousePos.x-25;
       }
-      else if (mousePos.x > XBOUNDSFAR) {
+      else if (mousePos.x-25 > XBOUNDSFAR) {
         drag.ex = XBOUNDSFAR;
       }
-      else if (mousePos.x < XBOUNDSCLOSE) {
+      else if (mousePos.x-25 < XBOUNDSCLOSE) {
         drag.ex = XBOUNDSCLOSE;
       }
       pauseScrollObject.x = drag.ex
@@ -2358,7 +2539,7 @@ function addWave() {
 
 canvas.addEventListener('click', function(event) {
   var mousePos = getMousePos(canvas, event);
-  drag.enabled = false;
+  drag.enabled = false; // 0 = in-game, 1 = pause, 2 = main, 3 = level select
   if (stage == 0) {
         //addBullet(mousePos, towers[towers.length-1]);
     var selectedButton = isInside(mousePos, buttons);
@@ -2431,11 +2612,12 @@ canvas.addEventListener('click', function(event) {
       }
     }
   }
-  if (stage == 1) {
+  else if (stage == 1) {
     var pauseMenuButtonCheck = isInside(mousePos, pauseArr);
     if (pauseMenuButtonCheck == null) {
       return;
     }
+    playClick();
     if (pauseMenuButtonCheck == pauseArr[1]) { // 0 = volume, 1 = restart, 2 = save, 3 = main menu
       location.reload();
     }
@@ -2451,14 +2633,32 @@ canvas.addEventListener('click', function(event) {
       console.log("SAVED");
     }
   }
-  if (stage == 2){
+  else if (stage == 2) {
     var onPlay = isInside(mousePos, [{x: homeScreenPlayButton.x, y: homeScreenPlayButton.y, w: homeScreenPlayButton.w, h: homeScreenPlayButton.h-145}]);
     if (onPlay != null) {
       ticker = 0;
       direction = 0;
+      playClick();
     }
   }
-
+  else if (stage == 3) {
+    var check = isInside(mousePos, [levelBoxRectReal]);
+    if (check != null) {
+      playClick();
+      selectedLevel = 0;
+      stage = 0;
+      reset();
+      return;
+    }
+    if (mousePos.x < 150) {
+      playClick();
+      // go to previous level
+    }
+    if (mousePos.x > canvas.width-150) {
+      playClick();
+      // go to next level
+    }
+  }
 }, false);
 
 
