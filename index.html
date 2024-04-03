@@ -24,7 +24,7 @@ canvas {
                         
 </style>
 </head>
-<body style="background-color:#af8080;">
+<body style="background-color:#000000;">
   <canvas id="myCanvas" width='1300' height='900' style="background-color:#000000"></canvas>
 </body>   
 <script>
@@ -46,6 +46,23 @@ var stage = 0;
 //  STAGE: 2 --> MAIN MENU
 
 //*/
+// HOME SCREEN
+var homeScreenBackground = new Image();
+homeScreenBackground.src = "images/homeScreen/background.png";
+var homeScreenPlayButton0 = new Image();
+homeScreenPlayButton0.src = "images/homeScreen/playButton/pixil-frame-0.png";
+var homeScreenPlayButton1 = new Image();
+homeScreenPlayButton1.src = "images/homeScreen/playButton/pixil-frame-1.png";
+
+var homeScreenPlayButton = {
+  x: 445, 
+  y: 320,
+  w: 400,
+  h: 400,
+  hover: false
+}
+
+// GAME SCREEN
 
 const NUMCOLS = 15;
 const NUMROWS = 10;
@@ -55,6 +72,8 @@ const GAMEHEIGHT = BOXWH*NUMROWS;
 
 const XOFFSET = (canvas.width-GAMEWIDTH)/2;
 const YOFFSET = (canvas.height-GAMEHEIGHT)/2;
+
+const MONEYGAINED = 3;
 
 // GAMEPLAY MECHANICS
 const GAMESPEED = .25;
@@ -261,6 +280,7 @@ const level1 = [
 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 
 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0];
 const level1SS = [0,0];
+const level1ENTRY = 0; // 0 --> RIGHT, 1 --> LEFT, 2 --> UP, 3 --> DOWN
 
 var seconds = 0;
 var towers = []
@@ -677,17 +697,17 @@ var waves = [
   },
   {//redEI, blueEI, greenEI, grayEI, brownEI, pinkEI, limeEI, aquaEI, orangeEI, purpleEI
     arr: 
-    [0,       0,      0,       0,      150,      0,      0,      0,       0,       0],
+    [0,       0,      0,       0,      50,      0,      0,      0,       0,       0],
     waveNum: 17
   },
   {//redEI, blueEI, greenEI, grayEI, brownEI, pinkEI, limeEI, aquaEI, orangeEI, purpleEI
     arr: 
-    [0,       0,      0,       0,      0,      0,      75,      0,       0,       0],
+    [25,       0,      0,       0,      0,      0,      50,      0,       0,       0],
     waveNum: 18
   },
   {//redEI, blueEI, greenEI, grayEI, brownEI, pinkEI, limeEI, aquaEI, orangeEI, purpleEI
     arr: 
-    [0,       0,      0,       0,      0,      0,      0,      200,       0,       0],
+    [30,       30,      30,       0,      30,      0,      0,      30,       0,       0],
     waveNum: 19
   },
   {//redEI, blueEI, greenEI, grayEI, brownEI, pinkEI, limeEI, aquaEI, orangeEI, purpleEI
@@ -762,10 +782,14 @@ var waves = [
   },  
   {//redEI, blueEI, greenEI, grayEI, brownEI, pinkEI, limeEI, aquaEI, orangeEI, purpleEI
     arr: 
-    [50,       50,      50,       50,      50,      10,      25,      50,       10,       15],
+    [30,       30,      30,       30,      30,      10,      25,      50,       10,       15],
     waveNum: 34
   }
 ]
+
+
+
+
 
 var colorArr = [redEI, blueEI, greenEI, grayEI, brownEI, pinkEI, limeEI, aquaEI, orangeEI, purpleEI];
 var pathCoords = [];
@@ -778,7 +802,7 @@ var tmp = null;
 var coords = [];
 var directions = [];
 var currentRow = 0;
-var balance = 900;
+var balance = 600;
 var drag = {
   sx: 0,
   sy: 0,
@@ -853,6 +877,10 @@ function pathFind(selectedLevelMap, startSq) {
 }
 
 function drawTowers() {
+  if (stage > 1) {
+    window.requestAnimationFrame(drawTowers);
+    return;
+  }
     c.fillStyle = "red";
 
     for (let i = 0; i < towers.length; i++) {
@@ -883,7 +911,6 @@ function drawTowers() {
       }
 
     }
-
   window.requestAnimationFrame(drawTowers);
 }
 
@@ -976,7 +1003,10 @@ function createDirections() {
 
 function drawBullets() {
   clean();
-
+  if (stage > 1) {
+    window.requestAnimationFrame(drawBullets);
+    return;
+  }
   for (let i = 0; i < bullets.length; i++) {
     if (bullets[i].twr.type == GUNNER) {
       c.fillStyle = "green";
@@ -1019,9 +1049,11 @@ function drawBullets() {
 }
 
 function drawBackground() {
-
-
   c.clearRect(0,0,canvas.width, canvas.height);
+  if (stage > 1) {
+    window.requestAnimationFrame(drawBackground);
+    return;
+  }
   currentRow = 0;
   for (let i = 0; i < selectedLevelMap.length; i++) {
     if (i != 0 && i % NUMCOLS == 0) {
@@ -1074,7 +1106,7 @@ function moveEnemies() {
       continue;
     }
     if (enemies[i].health <= 0) {
-      balance+=2;
+      balance+=MONEYGAINED;
       if (enemies[i].color == pinkEI) {
         generateEnemies(10, enemies[i]);
         //clean();
@@ -1154,6 +1186,10 @@ function drawStroked(text, x, y) {
 }
 
 function drawHeroButtons() {
+  if (stage > 1) {
+    window.requestAnimationFrame(drawHeroButtons);
+    return;
+  }
   const textOffsetX = 30;
   const textOffsetY = 75;
   c.textAlign = "center";
@@ -1252,7 +1288,7 @@ function generateWave(wave) { // main generation func
       enemies.push({
         desc: rocketTypes[i].desc,
         dir: rocketTypes[i].dir, 
-        x: XOFFSET-90-SoffSet*4/rocketTypes[i].speed,
+        x: XOFFSET-90-SoffSet*4,
         y: YOFFSET, 
         w: BOXWH, 
         h: BOXWH, 
@@ -1621,9 +1657,6 @@ function drawPauseMenu() {
   window.requestAnimationFrame(drawPauseMenu);
 }
 
-
-
-
 function adjustTowers() { // updates target and tower dy dx
   var closestEnemy = -1;
   var maxNum = -1;
@@ -1648,6 +1681,10 @@ function adjustTowers() { // updates target and tower dy dx
 }
 
 function drawButtons() {
+  if (stage > 1) {
+    window.requestAnimationFrame(drawButtons);
+    return;
+  }
   for (let i = 0; i < buttons.length; i++) {
     if (buttons[i] == nextWaveButton) {
       if (enemies.length == 0) {
@@ -1685,6 +1722,10 @@ function blastFramesFunction() {
 
 function drawUpgrades() {
   // if click on tower and open upgrades
+  if (stage > 1) {
+    window.requestAnimationFrame(drawUpgrades);
+    return;
+  }
   if (towers.length > 0) {
     if (selectedTower != null) {
       const baseX = XOFFSET +GAMEWIDTH;
@@ -1737,6 +1778,60 @@ function drawUpgrades() {
   window.requestAnimationFrame(drawUpgrades);
 }
 
+function drawMainScreen() {
+  if (stage == 2) {
+    c.drawImage(homeScreenBackground, 0, 0, canvas.width, canvas.height);
+    if (ticker != -500) {
+      if (ticker < 400 && direction == 0) {
+        ticker++;
+        c.fillStyle = "black";
+        c.fillRect(homeScreenPlayButton.x+homeScreenPlayButton.w/2-4,0, 8, ticker*1.2);
+        c.drawImage(homeScreenPlayButton1, homeScreenPlayButton.x, homeScreenPlayButton.y, homeScreenPlayButton.w, homeScreenPlayButton.h);
+        c.drawImage(redEI, 260+ticker*1, 50, 200, 200);
+        c.drawImage(purpleEI, 260+ticker*1, 650, 200, 200);
+        c.drawImage(orangeEI, 260+ticker*1, 150, 200, 200);
+        c.drawImage(limeEI, 260+ticker*1, 550, 200, 200);
+      }
+      else if ((ticker > -300)) {
+        direction = 1;
+        ticker--;
+        c.fillStyle = "black";
+        c.fillRect(homeScreenPlayButton.x+homeScreenPlayButton.w/2-4,0, 8, ticker*1.2);
+        c.drawImage(homeScreenPlayButton1, homeScreenPlayButton.x, homeScreenPlayButton.y-(400-ticker), homeScreenPlayButton.w, homeScreenPlayButton.h);
+        c.drawImage(redEI, 260+400+Math.abs(400-ticker*1), 50, 200, 200);
+        c.drawImage(purpleEI, 260+400+Math.abs(400-ticker*1), 650, 200, 200);
+        c.drawImage(orangeEI, 260+400+Math.abs(400-ticker*1), 150, 200, 200);
+        c.drawImage(limeEI, 260+400+Math.abs(400-ticker*1), 550, 200, 200);
+      }
+      else {
+        stage = 3;
+      }
+    }
+    else {
+      c.drawImage(redEI, 260, 50, 200, 200);
+      c.drawImage(purpleEI, 260, 650, 200, 200);
+      c.drawImage(orangeEI, 260, 150, 200, 200);
+      c.drawImage(limeEI, 260, 550, 200, 200);
+      if (homeScreenPlayButton.hover) {
+        c.drawImage(homeScreenPlayButton1, homeScreenPlayButton.x, homeScreenPlayButton.y, homeScreenPlayButton.w, homeScreenPlayButton.h);
+      }
+      else {
+        c.drawImage(homeScreenPlayButton0, homeScreenPlayButton.x, homeScreenPlayButton.y, homeScreenPlayButton.w, homeScreenPlayButton.h);
+      }
+    }
+    window.requestAnimationFrame(drawMainScreen);
+  }
+  else {
+    window.requestAnimationFrame(drawMainScreen);
+  }
+
+}
+
+var ticker = -500;
+var direction = 0;
+
+
+
 pathFind(level1, level1SS);
 createDirections();
 drawBackground();
@@ -1749,7 +1844,12 @@ moveEnemies();
 drawUpgrades();
 drawPauseMenu();
 generateWave(waves[waveCount]);
-waveCount++;
+waveCount+=1;
+
+// HOME PAGE
+drawMainScreen();
+
+
 
 
 
@@ -1971,7 +2071,6 @@ canvas.addEventListener("mousemove", function (event) {
         drag.ex = XBOUNDSCLOSE;
       }
       pauseScrollObject.x = drag.ex
-      console.log("TEST");
     }
     else {
       for (let i = 0; i < pauseArr.length; i++) {
@@ -1984,9 +2083,13 @@ canvas.addEventListener("mousemove", function (event) {
     }
 
   }
-
-
-
+  if (stage == 2) {
+    homeScreenPlayButton.hover = false;
+    var onPlay = isInside(mousePos, [{x: homeScreenPlayButton.x, y: homeScreenPlayButton.y, w: homeScreenPlayButton.w, h: homeScreenPlayButton.h-145}]);
+    if (onPlay != null) {
+      homeScreenPlayButton.hover = true;
+    }
+  }
 }, false);
 
 canvas.addEventListener("mouseup", function (event) {
@@ -2068,12 +2171,6 @@ canvas.addEventListener("mousedown", function (event) {
       return;
     }
     else {
-      console.log("PAUSE X:");
-    console.log(pauseScrollObject.x);
-    console.log("DRAG EX:");
-    console.log(drag.ex);
-    console.log("DRAG SX:");
-    console.log(drag.sx);
       drag.sx = mousePos.x;
       drag.sy = mousePos.y;
       pauseScrollObject.x = drag.sx;
@@ -2087,14 +2184,14 @@ canvas.addEventListener("mousedown", function (event) {
 
 document.body.addEventListener('keydown', function(e) {
   if (e.key == "Escape") {
-    if (stage == 0) {
-      stage = 1;
+    if (stage < 2) {
+      if (stage == 0) {
+        stage = 1;
+      }
+      else {
+        stage = 0;
+      }
     }
-    else {
-      stage = 0;
-    }
-
-
   }
 });
 
@@ -2171,6 +2268,12 @@ function updateBullet(bullet, position) {
   }
   if (bullet.y < YOFFSET || bullet.y > YOFFSET + GAMEHEIGHT) {
     bullet.active = false;
+  }
+
+  if (bullet.twr.type == SNIPER) {
+    if (bullet.twr.kills > 0) {
+      bullet.active = false;
+    }
   }
 
   var AVERAGESPEED = bullet.twr.speed + .2 * bullet.twr.upgradeLevel2 * bullet.twr.speed;
@@ -2338,18 +2441,25 @@ canvas.addEventListener('click', function(event) {
     }
     else if (pauseMenuButtonCheck == pauseArr[3]) {
       stage = 2;
+      ticker = -500;
+      enemies = [];
+      bullets = [];
+      towers = [];
+      clean();
     }
     else if (pauseMenuButtonCheck == pauseArr[2]) {
       console.log("SAVED");
     }
   }
+  if (stage == 2){
+    var onPlay = isInside(mousePos, [{x: homeScreenPlayButton.x, y: homeScreenPlayButton.y, w: homeScreenPlayButton.w, h: homeScreenPlayButton.h-145}]);
+    if (onPlay != null) {
+      ticker = 0;
+      direction = 0;
+    }
+  }
+
 }, false);
-
-
-
-
-
-
 
 
 //HELPER FUNCTIONS
@@ -2386,8 +2496,8 @@ function checkHits() {
         else if (bullets[x].twr.type == SNIPER || bullets[x].twr.type == GUNNER || bullets[x].twr.type == NAIL) {
           var hitEnemy = isInside({x: bullets[x].x, y: bullets[x].y}, enemies);
           if (hitEnemy != null) {
-            playHit();
             if (hitEnemy.health > 0) {
+              playHit();
               const upgLevel = (bullets[x].twr.upgradeLevel1);
               const damageCalc = upgLevel*bullets[x].twr.damage*.25 + bullets[x].twr.damage;
               hitEnemy.health-=damageCalc;
