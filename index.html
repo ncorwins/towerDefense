@@ -60,9 +60,18 @@ const CANNONRANGE = 20;
 const CANNONSPEED = 3*GAMESPEED;
 const CANNONFIRERATE = 700*(1/GAMESPEED);
 
+const NAILFIRERATE = 400*(1/GAMESPEED);
+
+
 var SNIPERPIERCE = 5;
 const SNIPERSPEED = 30*GAMESPEED;
 const SNIPERFIRERATE = 500*(1/GAMESPEED);
+
+const FREEZETIME = 3;
+const FREEZESPEED = 3*GAMESPEED;
+const ICEFIRERATE = 1000*(1/GAMESPEED);
+const ICERANGE = 25;
+
 
 const ENEMYSIZE = 70;
 
@@ -90,8 +99,8 @@ var emptyGunner = new Image();
 emptyGunner.src = "images/gunner/empty.png";
 var gunnerImage = new Image();
 gunnerImage.src = "images/gunner/tower.png";
-var gunnerball = new Image();
-gunnerball.src = "images/gunner/gunnerball.png";
+//var gunnerball = new Image();
+//gunnerball.src = "images/gunner/gunnerball.png";
 
 
 var emptyCannon = new Image();
@@ -100,6 +109,21 @@ var cannonImage = new Image();
 cannonImage.src = "images/cannon/cannon.png";
 var cannonball = new Image();
 cannonball.src = "images/cannon/cannonball.png";
+
+var emptyNail = new Image();
+emptyNail.src = "images/nail/pixil-frame-0.png";
+var nailImage = new Image();
+nailImage.src = "images/nail/pixil-frame-1.png";
+var nailGameImage = new Image();
+nailGameImage.src = "images/nail/pixil-frame-2.png";
+
+var emptyIce = new Image();
+emptyIce.src = "images/iceTower/pixil-frame-0.png";
+var iceImage = new Image();
+iceImage.src = "images/iceTower/pixil-frame-1.png";
+var iceballImage = new Image();
+iceballImage.src = "images/iceTower/pixil-frame-2.png";
+
 
 var sniperImage = new Image();
 sniperImage.src = "images/sniper/SniperImage.png";
@@ -173,6 +197,8 @@ var towers = []
 var GUNNER = "gunner";
 var CANNON = "cannon";
 var SNIPER = "sniper";
+var NAIL = "nail";
+var ICE = "ice";
 
 var bullets = []
 const TOWEROFFSETX = 72;
@@ -186,7 +212,7 @@ var heroButtons = [{
   h: BOXWH,
   imgs: [emptyblank, gunnerImage],
   real: emptyGunner,
-  bullet: gunnerball,
+  bullet: "green",
   price: 200,
   damage: 1,
   kills: 0,
@@ -233,6 +259,44 @@ var heroButtons = [{
   pierce: 5,
   upgradeLevel0: 0,
   upgradeLevel1: 0,
+  upgradeLevel2: 0
+},
+  {
+  type: NAIL,
+  x: 41+TOWEROFFSETX, 
+  y: 209+TOWEROFFSETY, 
+  w: BOXWH,
+  h: BOXWH,
+  imgs: [emptyblank, nailImage],
+  real: emptyNail,
+  bullet: nailGameImage,
+  price: 700,
+  damage: 5,
+  kills: 0,
+  totalDamageApplied: 0,
+  speed: 5*GAMESPEED,
+  pierce: 1,
+  upgradeLevel0: 0,
+  upgradeLevel1: 0,
+  upgradeLevel2: 4
+},
+  {
+  type: ICE,
+  x: 41, 
+  y: 209+TOWEROFFSETY*2, 
+  w: BOXWH,
+  h: BOXWH,
+  imgs: [emptyblank, iceImage],
+  real: emptyIce,
+  bullet: iceballImage,
+  price: 900,
+  damage: 5,
+  kills: 0,
+  totalDamageApplied: 0,
+  speed: 3*GAMESPEED,
+  pierce: 1,
+  upgradeLevel0: 0,
+  upgradeLevel1: 4,
   upgradeLevel2: 0
 }]
 
@@ -637,7 +701,7 @@ var tmp = null;
 var coords = [];
 var directions = [];
 var currentRow = 0;
-var balance = 600;
+var balance = 900;
 
 function pathFind(selectedLevelMap, startSq) {
   while (!pathFound) {
@@ -714,7 +778,10 @@ function drawTowers() {
         towers[i].totalDamageApplied = 0;
       }
       c.strokeStyle = "white";
-      c.strokeRect(towers[selectedTower].x, towers[selectedTower].y, towers[selectedTower].w, towers[selectedTower].h);
+      if (selectedTower != null) {
+        c.strokeRect(towers[selectedTower].x, towers[selectedTower].y, towers[selectedTower].w, towers[selectedTower].h);
+      }
+
       drawStroked(Math.ceil(towers[i].totalDamageApplied), towers[i].x+8, towers[i].y+12);
       //c.drawImage(towers[i].imgs[1], towers[i].x, towers[i].y, towers[i].w, towers[i].h);
       var angle = ((Math.atan2(towers[i].dy, towers[i].dx) * 180) / Math.PI);
@@ -752,6 +819,27 @@ function drawRotated(degrees, tower){ // draw  a tower with rotation
     // draw the image
     // since the context is rotated, the image will be rotated also
     c.drawImage(tower.imgs[1], -tower.w/2,-tower.h/2, tower.w, tower.h);
+
+    // were done with the rotating so restore the unrotated context
+    c.restore();
+}
+
+function drawRotatedNail(degrees, tower){ // draw  a tower with rotation
+    //c.clearRect(0,0,canvas.width,canvas.height);
+
+    // save the unrotated context of the canvas so we can restore it later
+    // the alternative is to untranslate & unrotate after drawing
+    c.save();
+
+    // move to the center of the canvas
+    c.translate(tower.x+tower.w/2, tower.y+tower.h/2);
+
+    // rotate the canvas to the specified degrees
+    c.rotate(degrees*Math.PI/180);
+
+    // draw the image
+    // since the context is rotated, the image will be rotated also
+    c.drawImage(tower.twr.bullet, -tower.w/2,-tower.h/2, tower.w, tower.h);
 
     // were done with the rotating so restore the unrotated context
     c.restore();
@@ -825,6 +913,13 @@ function drawBullets() {
       //drawRotatedCannon(seconds*60 % 365, bullets[i]);
       c.drawImage(cannonball, bullets[i].x,bullets[i].y, bullets[i].w*2, bullets[i].h*2);
     }
+    else if (bullets[i].twr.type == NAIL) {
+      drawRotatedNail(bullets[i].rotation, bullets[i]);
+
+    }
+    else if (bullets[i].twr.type == ICE) {
+      c.drawImage(iceballImage, bullets[i].x,bullets[i].y, bullets[i].w*2, bullets[i].h*2);
+    }
       bullets[i].x += bullets[i].dx;
       bullets[i].y += bullets[i].dy;
       if (bullets[i].x < 0-bullets[i].w || bullets[i].x > canvas.width || bullets[i].y < 0-bullets[i].h || bullets[i].y > canvas.height) {
@@ -880,6 +975,9 @@ function moveEnemies() {
         return;
       }
   for (let i = 0; i < enemies.length; i++) {
+    if (enemies[i].freezeTime > 0) {
+      continue;
+    }
     if (enemies[i].x < XOFFSET) {
       enemies[i].x+=enemies[i].speed;
       continue;
@@ -1014,7 +1112,8 @@ function generateEnemies(numOfEnemies, enemy = {x: -1, y: 0}) { // generation fo
       current: rocketTypes[rand].current, 
       pixel: rocketTypes[rand].pixel,
       health: rocketTypes[rand].health, 
-      active: false
+      active: false,
+      freezeTime: 0
     });
     if (enemy.x != -1) {
       while (enemies[enemies.length-1].color == pinkEI || enemies[enemies.length-1].color == purpleEI || enemies[enemies.length-1].color == orangeEI) {
@@ -1031,7 +1130,8 @@ function generateEnemies(numOfEnemies, enemy = {x: -1, y: 0}) { // generation fo
           current: enemy.current, 
           pixel: rocketTypes[rand].pixel,
           health: rocketTypes[rand].health,
-          active: false
+          active: false,
+          freezeTime: 0
         });
       }
       enemies[enemies.length-1].x = enemy.x;
@@ -1071,7 +1171,8 @@ function generateWave(wave) { // main generation func
         current: rocketTypes[i].current, 
         pixel: rocketTypes[i].pixel,
         health: rocketTypes[i].health,
-        active: false 
+        active: false,
+        freezeTime: 0
       });
     }
   }
@@ -1140,12 +1241,66 @@ function shootGunner_4() {
 }
 
 
-
-
-
-
-
-
+function shootNail(tower) {
+  clean();
+  if (enemies.length == 0) {
+    return;
+  }
+  var active = false;
+  for (let i = 0; i < enemies.length; i++) {
+    if (enemies[i].active) {
+      active = true;
+    }
+  }
+  if (active) {
+    addBullet({x: 0, y: 0, w: 0, h: 0}, tower);
+  }
+}
+function shootNail_0() {
+  for (let i = 0; i < towers.length; i++) {
+    if (towers[i].type == NAIL) {
+      if (towers[i].upgradeLevel0 == 0) {
+        shootNail(towers[i]);
+      }
+    }
+  }
+}
+function shootNail_1() {
+  for (let i = 0; i < towers.length; i++) {
+    if (towers[i].type == NAIL) {
+      if (towers[i].upgradeLevel0 == 1) {
+        shootNail(towers[i]);
+      }
+    }
+  }
+}
+function shootNail_2() {
+  for (let i = 0; i < towers.length; i++) {
+    if (towers[i].type == NAIL) {
+      if (towers[i].upgradeLevel0 == 2) {
+        shootNail(towers[i]);
+      }
+    }
+  }
+}
+function shootNail_3() {
+  for (let i = 0; i < towers.length; i++) {
+    if (towers[i].type == NAIL) {
+      if (towers[i].upgradeLevel0 == 3) {
+        shootNail(towers[i]);
+      }
+    }
+  }
+}
+function shootNail_4() {
+  for (let i = 0; i < towers.length; i++) {
+    if (towers[i].type == NAIL) {
+      if (towers[i].upgradeLevel0 == 4) {
+        shootNail(towers[i]);
+      }
+    }
+  }
+}
 
 function shootSniper(tower) {
   clean();
@@ -1271,6 +1426,71 @@ function shootCannon_4() {
   }
 }
 
+function shootIce(tower) {
+  clean();
+  if (enemies.length == 0) {
+    return;
+  }
+  var active = false;
+  for (let i = 0; i < enemies.length; i++) {
+    if (enemies[i].active) {
+      active = true;
+    }
+  }
+  if (active) {
+    addBullet({x: 0, y: 0, w: BOXWH/2, h: BOXWH/2}, tower);
+  }
+}
+function shootIce_0() {
+  for (let i = 0; i < towers.length; i++) {
+    if (towers[i].type == ICE) {
+      if (towers[i].upgradeLevel0 == 0) {
+        shootCannon(towers[i]);
+      }
+    }
+  }
+}
+function shootIce_1() {
+  for (let i = 0; i < towers.length; i++) {
+    if (towers[i].type == ICE) {
+      if (towers[i].upgradeLevel0 == 1) {
+        shootCannon(towers[i]);
+      }
+    }
+  }
+}
+function shootIce_2() {
+  for (let i = 0; i < towers.length; i++) {
+    if (towers[i].type == ICE) {
+      if (towers[i].upgradeLevel0 == 2) {
+        shootCannon(towers[i]);
+      }
+    }
+  }
+}
+function shootIce_3() {
+  for (let i = 0; i < towers.length; i++) {
+    if (towers[i].type == ICE) {
+      if (towers[i].upgradeLevel0 == 3) {
+        shootCannon(towers[i]);
+      }
+    }
+  }
+}
+function shootIce_4() {
+  for (let i = 0; i < towers.length; i++) {
+    if (towers[i].type == ICE) {
+      if (towers[i].upgradeLevel0 == 4) {
+        shootCannon(towers[i]);
+      }
+    }
+  }
+}
+
+
+
+
+
 
 function adjustTowers() { // updates target and tower dy dx
   var closestEnemy = -1;
@@ -1363,22 +1583,22 @@ function drawUpgrades() {
       c.fillText("Damage", baseX+40*scale, baseY+12*scale+30*scale);
       c.fillText("Speed", baseX+40*scale, baseY+12*scale+30*scale*2);
       if (towers[selectedTower].upgradeLevel0 < 4) {
-        c.fillText("$ " + (PRICEMULT + towers[selectedTower].upgradeLevel0*PRICEMULT), baseX+80*scale, baseY+12*scale)
+        c.fillText("$ " + (PRICEMULT + towers[selectedTower].upgradeLevel0*PRICEMULT), baseX+85*scale, baseY+12*scale)
       }
       else {
-        c.fillText("MAX", baseX+80*scale, baseY+12*scale)
+        c.fillText("MAX", baseX+85*scale, baseY+12*scale)
       }
       if (towers[selectedTower].upgradeLevel1 < 4) {
-        c.fillText("$ " + (PRICEMULT + towers[selectedTower].upgradeLevel1*PRICEMULT), baseX+80*scale, baseY+12*scale+30*scale)
+        c.fillText("$ " + (PRICEMULT + towers[selectedTower].upgradeLevel1*PRICEMULT), baseX+85*scale, baseY+12*scale+30*scale)
       }
       else {
-        c.fillText("MAX", baseX+80*scale, baseY+12*scale)
+        c.fillText("MAX", baseX+85*scale, baseY+12*scale+30*scale)
       }
       if (towers[selectedTower].upgradeLevel2 < 4) {
-        c.fillText("$ " + (PRICEMULT + towers[selectedTower].upgradeLevel2*PRICEMULT), baseX+80*scale, baseY+12*scale+30*scale*2)
+        c.fillText("$ " + (PRICEMULT + towers[selectedTower].upgradeLevel2*PRICEMULT), baseX+85*scale, baseY+12*scale+30*scale*2)
       }
       else {
-        c.fillText("MAX", baseX+80*scale, baseY+12*scale)
+        c.fillText("MAX", baseX+85*scale, baseY+12*scale+30*scale*2)
       }
     }
   }
@@ -1417,6 +1637,18 @@ setInterval(shootCannon_1, CANNONFIRERATE*(5/6));
 setInterval(shootCannon_2, CANNONFIRERATE*(4/5));
 setInterval(shootCannon_3, CANNONFIRERATE*(3/4));
 setInterval(shootCannon_4, CANNONFIRERATE*(1/2));
+
+setInterval(shootNail_0, NAILFIRERATE);
+setInterval(shootNail_1, NAILFIRERATE*(5/6));
+setInterval(shootNail_2, NAILFIRERATE*(4/5));
+setInterval(shootNail_3, NAILFIRERATE*(3/4));
+setInterval(shootNail_4, NAILFIRERATE*(1/2));
+
+setInterval(shootIce_0, ICEFIRERATE);
+setInterval(shootIce_1, ICEFIRERATE*(5/6));
+setInterval(shootIce_2, ICEFIRERATE*(4/5));
+setInterval(shootIce_3, ICEFIRERATE*(3/4));
+setInterval(shootIce_4, ICEFIRERATE*(1/2));
 
 
 setInterval(animsUI, 50);
@@ -1483,6 +1715,37 @@ function isInsideCannon(pos, arr) {
     return true;
   }
 
+}
+
+function isInsideIce(pos, arr) {
+  const ANIMOFFSET = 22;
+  var found = false;
+  const upgLevel = (pos.twr.upgradeLevel1);
+  const damageCalc = upgLevel*pos.twr.damage*.25 + pos.twr.damage;
+    for (let i =0; i < arr.length; i++) {
+      if (arr[i] != null) {
+        if (pos.x > arr[i].x && pos.x < arr[i].x + arr[i].w - ANIMOFFSET && pos.y < arr[i].y + arr[i].h - ANIMOFFSET && pos.y > arr[i].y) {
+          found = true;
+          break;
+        }
+      }
+    }
+  if (!found) {
+    return null;
+  }
+  else {
+    for (let i =0; i < arr.length; i++) {
+      if (arr[i] != null) {
+        if (pos.x+ICERANGE > arr[i].x && pos.x-ICERANGE < arr[i].x + arr[i].w - ANIMOFFSET && pos.y-ICERANGE < arr[i].y + arr[i].h - ANIMOFFSET && pos.y+ICERANGE > arr[i].y) {
+          if (arr[i].health > 0) {
+            arr[i].freezeTime = FREEZETIME;
+          }
+        }
+      }
+    }
+    console.log(arr);
+    return true;
+  }
 }
 
 function getMousePos(canvas, event) {
@@ -1666,7 +1929,31 @@ function addBullet(position, tower) {
       active: true
     });
   }
-
+  if (tower.type == NAIL) {
+    bullets.push({
+      x: tower.x + tower.w/2, 
+      y: tower.y + tower.h/2, 
+      dx: 0, 
+      dy: 0, 
+      w: 25, 
+      h: 25,
+      twr: tower,
+      active: true,
+      rotation: getRandomIntInclusive(0,360)
+    });
+  }
+  if (tower.type == ICE) {
+    bullets.push({
+      x: tower.x + tower.w/2, 
+      y: tower.y + tower.h/2, 
+      dx: 0, 
+      dy: 0, 
+      w: 15, 
+      h: 15,
+      twr: tower,
+      active: true
+    });
+  }
 
   updateBullet(bullets[bullets.length-1], position);
 }
@@ -1681,7 +1968,36 @@ function updateBullet(bullet, position) {
   }
 
   var AVERAGESPEED = bullet.twr.speed + .2 * bullet.twr.upgradeLevel2 * bullet.twr.speed;
-
+  if (bullet.twr.type == NAIL) {
+    for (let i = 0; i < directions.length; i++) {
+      var check = isInside(bullet, directions);
+      if (check != null) {
+        const freedom = 3;
+        bullet.dx = 0;
+          bullet.dy = 0;
+          if (bullet.x < check.x + check.w/2 - freedom) {
+            bullet.dx=1;
+          }
+          else if (bullet.x > check.x + check.w/2 + freedom) {
+            bullet.dx=-1;
+          }
+          if (bullet.y < check.y + check.w/2 - freedom) {
+            bullet.dy=1;
+          }
+          else if (bullet.y > check.y + check.w/2 + freedom) {
+            bullet.dy=-1;
+          }
+          return;
+        }
+      }
+  }
+  else if (bullet.twr.type == ICE) {
+    if (bullet.freezeTime > 0) {
+      bullet.dx = 0;
+      bullet.dy = 0;
+      return;
+    }
+  }
 
   
   var changeX = (position.x+position.w/2-bullet.x);
@@ -1738,6 +2054,7 @@ canvas.addEventListener('click', function(event) {
   var selectedArrow = isInside(mousePos, arrowButtons);
   var selectedTowerCheck = isInside(mousePos, towers);
   if (selectedButton == selectedArrow && selectedArrow == selectedTowerCheck && mousePos.x > XOFFSET && mousePos.x < XOFFSET+GAMEWIDTH && mousePos.y > YOFFSET && mousePos.y < YOFFSET +GAMEHEIGHT) {
+    selectedTower = null;
     return;
   }
 
@@ -1833,7 +2150,13 @@ function checkHits() {
           }
           
         }
-        else if (bullets[x].twr.type == SNIPER || bullets[x].twr.type == GUNNER) {
+        else if (bullets[x].twr.type == ICE) {
+          var check = isInsideIce(bullets[x], enemies);
+          if (check != null) {
+            bullets[x] = null;
+          }
+        }
+        else if (bullets[x].twr.type == SNIPER || bullets[x].twr.type == GUNNER || bullets[x].twr.type == NAIL) {
           var hitEnemy = isInside({x: bullets[x].x, y: bullets[x].y}, enemies);
           if (hitEnemy != null) {
             playHit();
@@ -1865,7 +2188,19 @@ function checkHits() {
 
 
 function Timer() { // game timer
-  seconds+=.15;
+  seconds+=.015;
+  clean();
+  if (enemies.length == 0) {
+    return;
+  }
+  for (let i = 0; i < enemies.length; i++) {
+    if (enemies[i].freezeTime > 0) {
+      enemies[i].freezeTime-=.015
+    }
+    else {
+      enemies[i].freezeTime = 0;
+    }
+  }
   checkHits(); 
 }
 
