@@ -24,7 +24,7 @@ canvas {
                         
 </style>
 </head>
-<body style="background-color:#000000;">
+<body style="background-color:#af8080;">
   <canvas id="myCanvas" width='1300' height='900' style="background-color:#000000"></canvas>
 </body>   
 <script>
@@ -38,6 +38,15 @@ var canvas = document.getElementById("myCanvas");
 var c = canvas.getContext("2d");
 c.font = "30px ArcadeClassic";
 c.imageSmoothingEnabled = false;
+
+var stage = 0;
+/*//
+//  STAGE: 0 --> GAMEPLAY
+//  STAGE: 1 --> PAUSE
+//  STAGE: 2 --> MAIN MENU
+
+//*/
+
 const NUMCOLS = 15;
 const NUMROWS = 10;
 const BOXWH = 60;
@@ -175,6 +184,67 @@ var upgradeArrowButton2 = {
   hover: false
 }
 var arrowButtons = [upgradeArrowButton0, upgradeArrowButton1, upgradeArrowButton2];
+
+
+var pauseMenuMainImage = new Image();
+pauseMenuMainImage.src = "images/pauseMenu5/pixil-frame-0.png";
+var pauseMenuVolumeHover = new Image();
+pauseMenuVolumeHover.src = "images/pauseMenu5/pixil-frame-1.png";
+var pauseMenuRestartHover = new Image();
+pauseMenuRestartHover.src = "images/pauseMenu5/pixil-frame-2.png";
+var pauseMenuSaveHover = new Image();
+pauseMenuSaveHover.src = "images/pauseMenu5/pixil-frame-3.png";
+var pauseMenuMainMenuHover = new Image();
+pauseMenuMainMenuHover.src = "images/pauseMenu5/pixil-frame-4.png";
+var pauseMenuScrollImage = new Image();
+pauseMenuScrollImage.src = "images/pauseMenu5/pixil-frame-5.png";
+
+
+const pauseOffSET = 107;
+var pauseArr = [{
+  x: 590-XOFFSET-pauseOffSET, 
+  y: 500,
+  w: 740,
+  h: 130,
+  hover: false,
+  img: pauseMenuVolumeHover},
+  {
+  x: 1100-XOFFSET-pauseOffSET, 
+  y: 335,
+  w: 260,
+  h: 105,
+  hover: false,
+  img: pauseMenuRestartHover
+},
+  {
+  x: 1100-XOFFSET-pauseOffSET, 
+  y: 190,
+  w: 260,
+  h: 105,
+  hover: false,
+  img: pauseMenuSaveHover
+},
+  {
+  x: 609-XOFFSET-pauseOffSET, 
+  y: 330,
+  w: 302,
+  h: 110,
+  hover: false,
+  img: pauseMenuMainMenuHover
+}
+];
+
+var pauseScrollObject = {
+  x: 290,
+  y: 521,
+  w: 58,
+  h: 80,
+  value: 0
+};
+
+
+
+
 
 
 var enemies = [
@@ -320,10 +390,12 @@ function calcInstances() {
 }
 calcInstances();
 
+var gameVolume = .005;
+
 function playHit() { // for playing poof sound
     var audio = new Audio();
     audio.src = "sounds/hit.mp3";
-    audio.volume = .005;
+    audio.volume = gameVolume;
     audio.currentTime = 0; // Reset audio to start
     audio.play();
 
@@ -331,14 +403,19 @@ function playHit() { // for playing poof sound
 function playCannon() { // for playing poof sound
     var audio = new Audio();
     audio.src = "sounds/cannon.mp3";
-    audio.volume = .005;
+    audio.volume = gameVolume;
     audio.currentTime = 0; // Reset audio to start
     audio.play();
 }
 function playClick() { // for playing poof sound
     var audio = new Audio();
     audio.src = "sounds/click.m4a";
-    audio.volume = .05;
+    if (gameVolume*10 > 1) {
+      audio.volume = 1;
+    }
+    else {
+      audio.volume = gameVolume*10;
+    }
     audio.currentTime = 1; // Reset audio to start
     audio.play();
 }
@@ -702,6 +779,13 @@ var coords = [];
 var directions = [];
 var currentRow = 0;
 var balance = 900;
+var drag = {
+  sx: 0,
+  sy: 0,
+  ex: 0,
+  ey: 0,
+  enabled: false
+}
 
 function pathFind(selectedLevelMap, startSq) {
   while (!pathFound) {
@@ -920,11 +1004,14 @@ function drawBullets() {
     else if (bullets[i].twr.type == ICE) {
       c.drawImage(iceballImage, bullets[i].x,bullets[i].y, bullets[i].w*2, bullets[i].h*2);
     }
+    if (stage == 0) {
       bullets[i].x += bullets[i].dx;
       bullets[i].y += bullets[i].dy;
       if (bullets[i].x < 0-bullets[i].w || bullets[i].x > canvas.width || bullets[i].y < 0-bullets[i].h || bullets[i].y > canvas.height) {
         bullets[i] = null;
       }
+    }
+
   }
 
 
@@ -971,6 +1058,10 @@ function drawEnemies() {
 
 function moveEnemies() {
   clean();
+  if (stage != 0) {
+    window.requestAnimationFrame(moveEnemies);
+    return;
+  }
   if (directions.length == 0) {
         return;
       }
@@ -1039,7 +1130,6 @@ function moveEnemies() {
         frame: 0,
         type: 1
       });
-      console.log(blastFrames);
         enemies[i] = null;
         continue;
       }
@@ -1180,18 +1270,22 @@ function generateWave(wave) { // main generation func
 
 function shootGunner(tower) {
   clean();
-  if (enemies.length == 0) {
+  if (stage != 0) {
     return;
   }
-  var active = false;
-  for (let i = 0; i < enemies.length; i++) {
-    if (enemies[i].active) {
-      active = true;
+    if (enemies.length == 0) {
+      return;
     }
-  }
-  if (active) {
-    addBullet({x: 0, y: 0, w: 0, h: 0}, tower);
-  }
+    var active = false;
+    for (let i = 0; i < enemies.length; i++) {
+      if (enemies[i].active) {
+        active = true;
+      }
+    }
+    if (active) {
+      addBullet({x: 0, y: 0, w: 0, h: 0}, tower);
+    }
+
 
 }
 function shootGunner_0() {
@@ -1243,18 +1337,22 @@ function shootGunner_4() {
 
 function shootNail(tower) {
   clean();
-  if (enemies.length == 0) {
+  if (stage != 0) {
     return;
   }
-  var active = false;
-  for (let i = 0; i < enemies.length; i++) {
-    if (enemies[i].active) {
-      active = true;
+    if (enemies.length == 0) {
+      return;
     }
-  }
-  if (active) {
-    addBullet({x: 0, y: 0, w: 0, h: 0}, tower);
-  }
+    var active = false;
+    for (let i = 0; i < enemies.length; i++) {
+      if (enemies[i].active) {
+        active = true;
+      }
+    }
+    if (active) {
+      addBullet({x: 0, y: 0, w: 0, h: 0}, tower);
+    }
+
 }
 function shootNail_0() {
   for (let i = 0; i < towers.length; i++) {
@@ -1304,19 +1402,23 @@ function shootNail_4() {
 
 function shootSniper(tower) {
   clean();
-  if (enemies.length == 0) {
+  if (stage != 0) {
     return;
   }
-  var active = false;
-  for (let i = 0; i < enemies.length; i++) {
-    if (enemies[i].active) {
-      active = true;
+    if (enemies.length == 0) {
+      return;
     }
-  }
-  if (active) {
-    tower.kills = 0;
-    addBullet({x: 0, y: 0, w: 0, h: 0}, tower);
-  }
+    var active = false;
+    for (let i = 0; i < enemies.length; i++) {
+      if (enemies[i].active) {
+        active = true;
+      }
+    }
+    if (active) {
+      tower.kills = 0;
+      addBullet({x: 0, y: 0, w: 0, h: 0}, tower);
+    }
+
 }
 function shootSniper_0() {
   for (let i = 0; i < towers.length; i++) {
@@ -1367,18 +1469,21 @@ function shootSniper_4() {
 
 function shootCannon(tower) {
   clean();
-  if (enemies.length == 0) {
+  if (stage != 0) {
     return;
   }
-  var active = false;
-  for (let i = 0; i < enemies.length; i++) {
-    if (enemies[i].active) {
-      active = true;
+    if (enemies.length == 0) {
+      return;
     }
-  }
-  if (active) {
-    addBullet({x: 0, y: 0, w: BOXWH/2, h: BOXWH/2}, tower);
-  }
+    var active = false;
+    for (let i = 0; i < enemies.length; i++) {
+      if (enemies[i].active) {
+        active = true;
+      }
+    }
+    if (active) {
+      addBullet({x: 0, y: 0, w: BOXWH/2, h: BOXWH/2}, tower);
+    }
 }
 function shootCannon_0() {
   for (let i = 0; i < towers.length; i++) {
@@ -1428,18 +1533,22 @@ function shootCannon_4() {
 
 function shootIce(tower) {
   clean();
-  if (enemies.length == 0) {
+  if (stage != 0) {
     return;
   }
-  var active = false;
-  for (let i = 0; i < enemies.length; i++) {
-    if (enemies[i].active) {
-      active = true;
+    if (enemies.length == 0) {
+      return;
     }
-  }
-  if (active) {
-    addBullet({x: 0, y: 0, w: BOXWH/2, h: BOXWH/2}, tower);
-  }
+    var active = false;
+    for (let i = 0; i < enemies.length; i++) {
+      if (enemies[i].active) {
+        active = true;
+      }
+    }
+    if (active) {
+      addBullet({x: 0, y: 0, w: BOXWH/2, h: BOXWH/2}, tower);
+    }
+
 }
 function shootIce_0() {
   for (let i = 0; i < towers.length; i++) {
@@ -1487,7 +1596,30 @@ function shootIce_4() {
   }
 }
 
+function drawPauseMenu() {
+  if (stage != 1) {
+    window.requestAnimationFrame(drawPauseMenu);
+    return;
+  }
+  c.drawImage(pauseMenuMainImage, XOFFSET, YOFFSET, GAMEWIDTH, GAMEWIDTH);
+  for (let i = 0; i < pauseArr.length; i++) {
+    if (pauseArr[i].hover) {
+      c.drawImage(pauseArr[i].img, XOFFSET, YOFFSET, GAMEWIDTH, GAMEWIDTH);
+    }
+  }
+  c.font = "30px ArcadeClassic";
+  if (pauseArr[0].hover) {
+    c.fillStyle = "darkblue";
+  }
+  else {
+    c.fillStyle = "white";
+  }
 
+
+  c.fillText("Volume: " + Math.round(gameVolume*500), XOFFSET+430, YOFFSET+GAMEWIDTH/2-65);
+  c.drawImage(pauseMenuScrollImage, pauseScrollObject.x-pauseScrollObject.w-35, YOFFSET, GAMEWIDTH, GAMEWIDTH);
+  window.requestAnimationFrame(drawPauseMenu);
+}
 
 
 
@@ -1615,6 +1747,7 @@ drawTowers();
 drawEnemies();
 moveEnemies();
 drawUpgrades();
+drawPauseMenu();
 generateWave(waves[waveCount]);
 waveCount++;
 
@@ -1743,7 +1876,6 @@ function isInsideIce(pos, arr) {
         }
       }
     }
-    console.log(arr);
     return true;
   }
 }
@@ -1795,27 +1927,62 @@ function snap() {
 //EVENT LISTENERS
 canvas.addEventListener("mousemove", function (event) {
   var mousePos = getMousePos(canvas, event);
-  //updateBullet(bullets[bullets.length-1], mousePos);
-  hoverButton = isInside(mousePos, buttons);
-  hoverButton2 = isInside(mousePos, arrowButtons);
-  if (tmp != null) {
-    tmp.x = mousePos.x-tmp.w/2;
-    tmp.y = mousePos.y-tmp.h/2;
+  if (stage == 0) {
+    //updateBullet(bullets[bullets.length-1], mousePos);
+    hoverButton = isInside(mousePos, buttons);
+    hoverButton2 = isInside(mousePos, arrowButtons);
+    if (tmp != null) {
+      tmp.x = mousePos.x-tmp.w/2;
+      tmp.y = mousePos.y-tmp.h/2;
+    }
+    for (let i = 0; i < buttons.length; i++) {
+      buttons[i].hover = false;
+    }
+    for (let i = 0; i < arrowButtons.length; i++) {
+      arrowButtons[i].hover = false;
+    }
+    if (hoverButton == null && hoverButton2 == null) {
+      return;    
+    }
+    if (hoverButton == null) {
+      hoverButton2.hover = true;
+    }
+    else {
+      hoverButton.hover = true;
+    }
+
+
   }
-  for (let i = 0; i < buttons.length; i++) {
-    buttons[i].hover = false;
-  }
-  for (let i = 0; i < arrowButtons.length; i++) {
-    arrowButtons[i].hover = false;
-  }
-  if (hoverButton == null && hoverButton2 == null) {
-    return;    
-  }
-  if (hoverButton == null) {
-    hoverButton2.hover = true;
-  }
-  else {
-    hoverButton.hover = true;
+  if (stage == 1) {
+    var pauseMenuButtonCheck = isInside(mousePos, pauseArr);
+    var pauseMenuButtonCheck2 = isInside(mousePos, [pauseScrollObject]);
+    if (drag.enabled) {
+      drag.value = (pauseScrollObject.x - 290)/6750*2;
+      gameVolume = drag.value;
+      const XBOUNDSCLOSE = XOFFSET + 90;
+      const XBOUNDSFAR = XOFFSET + GAMEWIDTH - 144;
+      if (mousePos.x > XBOUNDSCLOSE && mousePos.x < XBOUNDSFAR) {
+        drag.ex = mousePos.x;
+      }
+      else if (mousePos.x > XBOUNDSFAR) {
+        drag.ex = XBOUNDSFAR;
+      }
+      else if (mousePos.x < XBOUNDSCLOSE) {
+        drag.ex = XBOUNDSCLOSE;
+      }
+      pauseScrollObject.x = drag.ex
+      console.log("TEST");
+    }
+    else {
+      for (let i = 0; i < pauseArr.length; i++) {
+        pauseArr[i].hover = false;
+      }
+      if (pauseMenuButtonCheck == null) {
+        return;
+      }
+      pauseMenuButtonCheck.hover = true;
+    }
+
   }
 
 
@@ -1824,73 +1991,112 @@ canvas.addEventListener("mousemove", function (event) {
 
 canvas.addEventListener("mouseup", function (event) {
   var mousePos = getMousePos(canvas, event);
-  if (tmp != null) {
-    snap();
+  if (stage == 0) {
     if (tmp != null) {
-      playClick();
-      balance -= tmp.price;
-        towers.push({
-          type: tmp.type,
-          x: tmp.x,
-          y: tmp.y,
-          w: tmp.w, 
-          h: tmp.h,
-          imgs: tmp.imgs,
-          real: tmp.real,
-          bullet: tmp.bullet,
-          price: tmp.price,
-          damage: tmp.damage,
-          kills: tmp.kills,
-          totalDamageApplied: tmp.totalDamageApplied,
-          speed: tmp.speed,
-          pierce: tmp.pierce,
-          upgradeLevel0: tmp.upgradeLevel0,
-          upgradeLevel1: tmp.upgradeLevel1,
-          upgradeLevel2: tmp.upgradeLevel2,
-        });
-        selectedTower = towers.length-1;
-    }
+      snap();
+      if (tmp != null) {
+        playClick();
+        balance -= tmp.price;
+          towers.push({
+            type: tmp.type,
+            x: tmp.x,
+            y: tmp.y,
+            w: tmp.w, 
+            h: tmp.h,
+            imgs: tmp.imgs,
+            real: tmp.real,
+            bullet: tmp.bullet,
+            price: tmp.price,
+            damage: tmp.damage,
+            kills: tmp.kills,
+            totalDamageApplied: tmp.totalDamageApplied,
+            speed: tmp.speed,
+            pierce: tmp.pierce,
+            upgradeLevel0: tmp.upgradeLevel0,
+            upgradeLevel1: tmp.upgradeLevel1,
+            upgradeLevel2: tmp.upgradeLevel2,
+          });
+          selectedTower = towers.length-1;
+      }
 
+    }
+    tmp = null;
   }
-  tmp = null;
+  if (stage == 1) {
+    //drag.enabled = false;
+    drag.ex = mousePos.x;
+    //drag.value = (drag.ex - pauseScrollObject.x)/1000;
+  }
   //updateBullet(bullets[bullets.length-1], mousePos);
 }, false);
 
 canvas.addEventListener("mousedown", function (event) {
   var mousePos = getMousePos(canvas, event);
-  var selectedHero = isInside(mousePos, heroButtons);
-  if (selectedHero == null) {
-    tmp = null;
-    return;
-  }
-  if (balance >= selectedHero.price) {
-    tmp = {
-      type: selectedHero.type,
-      x: selectedHero.x,
-      y: selectedHero.y,
-      w: selectedHero.w, 
-      h: selectedHero.h,
-      imgs: selectedHero.imgs,
-      real: selectedHero.real,
-      bullet: selectedHero.bullet,
-      price: selectedHero.price,
-      damage: selectedHero.damage,
-      kills: selectedHero.kills,
-      totalDamageApplied: selectedHero.totalDamageApplied,
-      speed: selectedHero.speed,
-      pierce: selectedHero.pierce,
-      upgradeLevel0: selectedHero.upgradeLevel0,
-      upgradeLevel1: selectedHero.upgradeLevel1,
-      upgradeLevel2: selectedHero.upgradeLevel2
+  if (stage == 0) {
+    var selectedHero = isInside(mousePos, heroButtons);
+    if (selectedHero == null) {
+      tmp = null;
+      return;
     }
-    tmp.x = mousePos.x-tmp.w/2;
-    tmp.y = mousePos.y-tmp.h/2;
+    if (balance >= selectedHero.price) {
+      tmp = {
+        type: selectedHero.type,
+        x: selectedHero.x,
+        y: selectedHero.y,
+        w: selectedHero.w, 
+        h: selectedHero.h,
+        imgs: selectedHero.imgs,
+        real: selectedHero.real,
+        bullet: selectedHero.bullet,
+        price: selectedHero.price,
+        damage: selectedHero.damage,
+        kills: selectedHero.kills,
+        totalDamageApplied: selectedHero.totalDamageApplied,
+        speed: selectedHero.speed,
+        pierce: selectedHero.pierce,
+        upgradeLevel0: selectedHero.upgradeLevel0,
+        upgradeLevel1: selectedHero.upgradeLevel1,
+        upgradeLevel2: selectedHero.upgradeLevel2
+      }
+      tmp.x = mousePos.x-tmp.w/2;
+      tmp.y = mousePos.y-tmp.h/2;
+    }
+  }
+  if (stage == 1) {
+    var pauseMenuButtonCheck = isInside(mousePos, [pauseScrollObject]);
+    if (pauseMenuButtonCheck == null) {
+      return;
+    }
+    else {
+      console.log("PAUSE X:");
+    console.log(pauseScrollObject.x);
+    console.log("DRAG EX:");
+    console.log(drag.ex);
+    console.log("DRAG SX:");
+    console.log(drag.sx);
+      drag.sx = mousePos.x;
+      drag.sy = mousePos.y;
+      pauseScrollObject.x = drag.sx;
+      drag.enabled = true;
+    }
   }
 
 
 
 }, false);
 
+document.body.addEventListener('keydown', function(e) {
+  if (e.key == "Escape") {
+    if (stage == 0) {
+      stage = 1;
+    }
+    else {
+      stage = 0;
+    }
+
+
+  }
+});
 
 function addBullet(position, tower) {
   if (tower.type == GUNNER) {
@@ -2049,81 +2255,102 @@ function addWave() {
 
 canvas.addEventListener('click', function(event) {
   var mousePos = getMousePos(canvas, event);
-  //addBullet(mousePos, towers[towers.length-1]);
-  var selectedButton = isInside(mousePos, buttons);
-  var selectedArrow = isInside(mousePos, arrowButtons);
-  var selectedTowerCheck = isInside(mousePos, towers);
-  if (selectedButton == selectedArrow && selectedArrow == selectedTowerCheck && mousePos.x > XOFFSET && mousePos.x < XOFFSET+GAMEWIDTH && mousePos.y > YOFFSET && mousePos.y < YOFFSET +GAMEHEIGHT) {
-    selectedTower = null;
-    return;
-  }
-
-
-  if (selectedTowerCheck != null) {
-    for (let i = 0; i < towers.length; i++) {
-          if (towers[i].x == selectedTowerCheck.x && towers[i].y == selectedTowerCheck.y) {
-            selectedTower = i;
+  drag.enabled = false;
+  if (stage == 0) {
+        //addBullet(mousePos, towers[towers.length-1]);
+    var selectedButton = isInside(mousePos, buttons);
+    var selectedArrow = isInside(mousePos, arrowButtons);
+    var selectedTowerCheck = isInside(mousePos, towers);
+    if (selectedButton == selectedArrow && selectedArrow == selectedTowerCheck && mousePos.x > XOFFSET && mousePos.x < XOFFSET+GAMEWIDTH && mousePos.y > YOFFSET && mousePos.y < YOFFSET +GAMEHEIGHT) {
+      selectedTower = null;
+      return;
+    }
+    if (selectedTowerCheck != null) {
+      for (let i = 0; i < towers.length; i++) {
+            if (towers[i].x == selectedTowerCheck.x && towers[i].y == selectedTowerCheck.y) {
+              selectedTower = i;
+            }
           }
+
+
+      return;
+    }
+    if (selectedButton != null) {
+      if (selectedButton == nextWaveButton) {
+        if (enemies.length == 0) {
+          playClick();
+          addWave();
+
         }
+      }
+    }
+    else if (selectedArrow != null){
+      if (towers[selectedTower] != null) {
+        if (towers.length > 0) {
+          if (selectedArrow.ind == 0) {
+            if (towers[selectedTower].upgradeLevel0 < 4) {
+              if (balance > 0) {
+                if (balance >= (PRICEMULT + towers[selectedTower].upgradeLevel0*PRICEMULT)) {
+                  balance -=(PRICEMULT + towers[selectedTower].upgradeLevel0*PRICEMULT);
+                  towers[selectedTower].upgradeLevel0++; // FIRE RATE
+                  playClick();
+                }
+              }
+
+            }
+          }
+          else if (selectedArrow.ind == 1) {
+            if (towers[selectedTower].upgradeLevel1 < 4) {
+              if (balance > 0) {
+                if (balance >= (PRICEMULT + towers[selectedTower].upgradeLevel1*PRICEMULT)) {
+                  balance -=(PRICEMULT + towers[selectedTower].upgradeLevel1*PRICEMULT);
+                  towers[selectedTower].upgradeLevel1++; // DAMAGE
+                  playClick();
+                }
+              }
+            }
+          }
+          else if (selectedArrow.ind == 2) {
+            if (towers[selectedTower].upgradeLevel2 < 4) {
+              if (balance > 0) {
+                if (balance >= (PRICEMULT + towers[selectedTower].upgradeLevel2*PRICEMULT)) {
+                  balance -=(PRICEMULT + towers[selectedTower].upgradeLevel2*PRICEMULT);
+                  towers[selectedTower].upgradeLevel2++; // SPEED
+                  playClick();
+                }
+              }
+
+            }
+          }
 
 
-    return;
-  }
-  if (selectedButton != null) {
-    if (selectedButton == nextWaveButton) {
-      if (enemies.length == 0) {
-        playClick();
-        addWave();
-
+        }
       }
     }
   }
-  else if (selectedArrow != null){
-    if (towers[selectedTower] != null) {
-      if (towers.length > 0) {
-        if (selectedArrow.ind == 0) {
-          if (towers[selectedTower].upgradeLevel0 < 4) {
-            if (balance > 0) {
-              if (balance >= (PRICEMULT + towers[selectedTower].upgradeLevel0*PRICEMULT)) {
-                balance -=(PRICEMULT + towers[selectedTower].upgradeLevel0*PRICEMULT);
-                towers[selectedTower].upgradeLevel0++; // FIRE RATE
-                playClick();
-              }
-            }
-
-          }
-        }
-        else if (selectedArrow.ind == 1) {
-          if (towers[selectedTower].upgradeLevel1 < 4) {
-            if (balance > 0) {
-              if (balance >= (PRICEMULT + towers[selectedTower].upgradeLevel1*PRICEMULT)) {
-                balance -=(PRICEMULT + towers[selectedTower].upgradeLevel1*PRICEMULT);
-                towers[selectedTower].upgradeLevel1++; // DAMAGE
-                playClick();
-              }
-            }
-          }
-        }
-        else if (selectedArrow.ind == 2) {
-          if (towers[selectedTower].upgradeLevel2 < 4) {
-            if (balance > 0) {
-              if (balance >= (PRICEMULT + towers[selectedTower].upgradeLevel2*PRICEMULT)) {
-                balance -=(PRICEMULT + towers[selectedTower].upgradeLevel2*PRICEMULT);
-                towers[selectedTower].upgradeLevel2++; // SPEED
-                playClick();
-              }
-            }
-
-          }
-        }
-
-
-      }
+  if (stage == 1) {
+    var pauseMenuButtonCheck = isInside(mousePos, pauseArr);
+    if (pauseMenuButtonCheck == null) {
+      return;
     }
-
+    if (pauseMenuButtonCheck == pauseArr[1]) { // 0 = volume, 1 = restart, 2 = save, 3 = main menu
+      location.reload();
+    }
+    else if (pauseMenuButtonCheck == pauseArr[3]) {
+      stage = 2;
+    }
+    else if (pauseMenuButtonCheck == pauseArr[2]) {
+      console.log("SAVED");
+    }
   }
-
 }, false);
+
+
+
+
+
+
+
 
 //HELPER FUNCTIONS
 function checkHits() {
@@ -2193,12 +2420,14 @@ function Timer() { // game timer
   if (enemies.length == 0) {
     return;
   }
-  for (let i = 0; i < enemies.length; i++) {
-    if (enemies[i].freezeTime > 0) {
-      enemies[i].freezeTime-=.015
-    }
-    else {
-      enemies[i].freezeTime = 0;
+  if (stage == 0) {
+    for (let i = 0; i < enemies.length; i++) {
+      if (enemies[i].freezeTime > 0) {
+        enemies[i].freezeTime-=.015
+      }
+      else {
+        enemies[i].freezeTime = 0;
+      }
     }
   }
   checkHits(); 
