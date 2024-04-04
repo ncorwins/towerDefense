@@ -287,10 +287,6 @@ var pauseScrollObject = {
 };
 
 
-
-
-
-
 var enemies = [
 ];
 const level1 = [
@@ -2000,13 +1996,12 @@ function drawLevelSelect() {
   c.fillRect(0,0,canvas.width, canvas.height);
   c.drawImage(levelArrows, levelArrowsRect.x, levelArrowsRect.y, levelArrowsRect.w, levelArrowsRect.h);
   c.drawImage(levelBoxImage, levelBoxRect.x, levelBoxRect.y, levelBoxRect.w, levelBoxRect.h);
-  //c.strokeStyle = "black";
-  //c.strokeRect(levelBoxRectReal.x, levelBoxRectReal.y, levelBoxRectReal.w, levelBoxRectReal.h);
   if (false) {
     c.drawImage(levelLockedImage, levelBoxRect.x, levelBoxRect.y, levelBoxRect.w, levelBoxRect.h);
-
   }
-
+  c.fillStyle = "black";
+  c.font = "165px ArcadeClassic";
+  c.fillText((userSelectedLevel + 1), levelBoxRectReal.x + levelBoxRectReal.w - 190, levelBoxRectReal.y + 6)
   window.requestAnimationFrame(drawLevelSelect);
 }
 
@@ -2537,6 +2532,7 @@ function addWave() {
   }               // redEI,   blueEI,greenEI,grayEI,brownEI,pinkEI, limeEI, aquaEI, orangeEI, purpleEI
 }
 
+var userSelectedLevel = 0;
 canvas.addEventListener('click', function(event) {
   var mousePos = getMousePos(canvas, event);
   drag.enabled = false; // 0 = in-game, 1 = pause, 2 = main, 3 = level select
@@ -2643,19 +2639,26 @@ canvas.addEventListener('click', function(event) {
   }
   else if (stage == 3) {
     var check = isInside(mousePos, [levelBoxRectReal]);
+
     if (check != null) {
-      playClick();
-      selectedLevel = 0;
+      selectedLevel = userSelectedLevel;
       stage = 0;
+      playClick();
       reset();
       return;
     }
     if (mousePos.x < 150) {
-      playClick();
+      if (userSelectedLevel > 0) {
+        userSelectedLevel -= 1;
+        playClick();
+      }
       // go to previous level
     }
     if (mousePos.x > canvas.width-150) {
-      playClick();
+      if (userSelectedLevel < levelMap.length - 1) {
+        userSelectedLevel += 1;
+        playClick();
+      }
       // go to next level
     }
   }
