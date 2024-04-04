@@ -286,6 +286,7 @@ var pauseScrollObject = {
   value: 0
 };
 
+var userSelectedLevel = 0;
 
 var enemies = [
 ];
@@ -315,6 +316,18 @@ const level2 = [
 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0];
 const level2SS = [0,4];
 
+const level3 = [
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 
+0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 
+0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 
+0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 
+0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 
+0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 
+1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+const level3SS = [0,8];
 
 const levelMap = [{
   grid: level1,
@@ -329,7 +342,15 @@ const levelMap = [{
   startingBalance: 600,
   difficulty: 0,
   background: null
-}]
+},
+{
+  grid: level3,
+  ss: level3SS,
+  startingBalance: 1000,
+  difficulty: 0,
+  background: null
+}
+]
 var selectedLevel = 0;
 //const level1ENTRY = 0; // 0 --> RIGHT, 1 --> LEFT, 2 --> UP, 3 --> DOWN
 
@@ -1985,6 +2006,7 @@ function reset() {
   createDirections();
   generateWave(waves[waveCount]);
   waveCount+=1;
+  balance = levelMap[selectedLevel].startingBalance;
 }
 
 function drawLevelSelect() {
@@ -2001,7 +2023,50 @@ function drawLevelSelect() {
   }
   c.fillStyle = "black";
   c.font = "165px ArcadeClassic";
-  c.fillText((userSelectedLevel + 1), levelBoxRectReal.x + levelBoxRectReal.w - 190, levelBoxRectReal.y + 6)
+  c.fillText((userSelectedLevel + 1), levelBoxRectReal.x + levelBoxRectReal.w - 190, levelBoxRectReal.y + 6);
+
+  for (let i = 0; i < levelMap.length; i++) {
+    c.strokeStyle = "black";
+      c.lineWidth = 2;
+    if (i == userSelectedLevel) {
+      c.fillStyle = "orange";
+      c.lineWidth = 3;
+      c.beginPath();
+      c.arc(canvas.width/2-levelMap.length*25+i*50+25, canvas.height-100, 16, 0, Math.PI*2);
+      c.closePath();
+      c.fill();
+      c.stroke();
+    }
+    else {
+      c.beginPath();
+      c.arc(canvas.width/2-levelMap.length*25+i*50+25, canvas.height-100, 10, 0, Math.PI*2);
+      c.closePath();
+      c.stroke();
+    }
+  }
+  console.log(levelMap[userSelectedLevel].backG);
+  if (levelMap[userSelectedLevel].background != null) {
+    c.drawImage(levelMap[userSelectedLevel].background, levelBoxRectReal.x+40, levelBoxRectReal.y+30, levelBoxRectReal.w-80, levelBoxRectReal.h-50);
+  }
+  else {
+    const xv = levelBoxRectReal.x+40;
+    const yv = levelBoxRectReal.y+30;
+    const width = levelBoxRectReal.w-80;
+    const height = levelBoxRectReal.h-50;
+    for (let i = 0; i < 10; i++) { // drawing rows
+      for (let x = 0; x < 15; x++) { // drawing cols
+        if (levelMap[userSelectedLevel].grid[i*15+x] == 0) {
+          c.fillStyle = "black";
+        } else {
+          c.fillStyle = "white";
+        }
+        c.fillRect(xv + x*(width/15), yv + i*(height/10), width/15, height/10);
+      }
+    }
+  }
+
+
+
   window.requestAnimationFrame(drawLevelSelect);
 }
 
@@ -2532,7 +2597,7 @@ function addWave() {
   }               // redEI,   blueEI,greenEI,grayEI,brownEI,pinkEI, limeEI, aquaEI, orangeEI, purpleEI
 }
 
-var userSelectedLevel = 0;
+
 canvas.addEventListener('click', function(event) {
   var mousePos = getMousePos(canvas, event);
   drag.enabled = false; // 0 = in-game, 1 = pause, 2 = main, 3 = level select
